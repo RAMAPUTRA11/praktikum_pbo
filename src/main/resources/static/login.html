@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Log In to Your Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--white);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 48px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            text-align: center;
+        }
+
+        .logo-box {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--sidebar-navy);
+            margin-bottom: 32px;
+            letter-spacing: -1px;
+        }
+
+        .logo-box span {
+            color: var(--primary-emerald);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--sidebar-navy);
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary-emerald);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: right;
+            color: var(--primary-emerald);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: -12px;
+            margin-bottom: 28px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--sidebar-navy);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-login:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+        }
+
+        .footer-text {
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer-text a {
+            color: var(--primary-emerald);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Tombol kembali ke landing page */
+        .back-home {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-home:hover { color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-home">← Kembali ke Beranda</a>
+
+    <div class="login-card">
+        <div class="logo-box">Tax<span>Flow.</span></div>
+
+        <h1>Selamat Datang Kembali</h1>
+        <p class="subtitle">Masuk untuk mengelola profil fiskal Anda</p>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Masukkan username" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+
+        <a href="#" class="forgot-link">Lupa Password?</a>
+
+        <button class="btn-login" onclick="handleLogin()">Masuk ke Dashboard</button>
+
+        <p class="footer-text">
+            Belum punya akun? <a href="register.html">Daftar sekarang</a>
+        </p>
+    </div>
+
+    <script>
+        async function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if(!username || !password) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Tidak Lengkap',
+                    text: 'Silakan isi username dan password Anda.',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+
+            // Tampilkan loading
+            Swal.fire({
+                title: 'Otentikasi...',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    localStorage.setItem("userPajak", JSON.stringify(user));
+                    
+                    Swal.fire({
+                        title: "Login Berhasil",
+                        text: `Selamat datang, ${user.username}!`,
+                        icon: "success",
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        if (user.role && user.role.toUpperCase() === 'ADMIN') {
+                            window.location.href = "admin.html";
+                        } else {
+                            window.location.href = user.onboarded ? "dashboard.html" : "onboarding.html";
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Gagal',
+                        text: 'Username atau password yang Anda masukkan salah.',
+                        confirmButtonColor: '#0f172a'
+                    });
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Tidak dapat terhubung ke server. Pastikan API menyala.',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        }
+
+        // Memungkinkan login dengan menekan tombol Enter
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>

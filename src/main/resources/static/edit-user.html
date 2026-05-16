@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Edit Profil Wajib Pajak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-app: #f1f5f9;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background: var(--bg-app);
+            color: var(--text-main); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .edit-container { 
+            width: 100%; 
+            max-width: 480px; 
+        }
+
+        .glass-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 20px; 
+            padding: 40px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-section h2 { 
+            color: var(--sidebar-navy); 
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header-section p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-size: 11px; 
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        input {
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-color);
+            background: #f8fafc; 
+            color: var(--text-main); 
+            outline: none; 
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        input:focus { 
+            border-color: var(--primary-emerald); 
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        input:disabled { 
+            background: #f1f5f9;
+            color: var(--text-muted);
+            cursor: not-allowed; 
+        }
+        
+        .btn-group { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 35px; 
+        }
+
+        .btn-save {
+            flex: 2; 
+            background: var(--sidebar-navy); 
+            color: var(--white);
+            border: none; 
+            padding: 14px; 
+            border-radius: 10px; 
+            font-weight: 700; 
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-save:hover { 
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .btn-cancel {
+            flex: 1; 
+            background: var(--white); 
+            color: var(--text-main);
+            border: 1px solid var(--border-color); 
+            padding: 14px; 
+            border-radius: 10px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #f8fafc;
+        }
+
+        .badge-id {
+            background: #ecfdf5;
+            color: var(--primary-emerald);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="edit-container">
+    <div class="glass-card">
+        <div class="header-section">
+            <span class="badge-id" id="user-id-display">USER ID: --</span>
+            <h2>Edit Wajib Pajak</h2>
+            <p>Perbarui informasi profil wajib pajak di bawah ini.</p>
+        </div>
+
+        <form id="editForm">
+            <div class="form-group">
+                <label>Username Sistem</label>
+                <input type="text" id="username" disabled>
+            </div>
+            <div class="form-group">
+                <label>Nama Lengkap (Sesuai KTP)</label>
+                <input type="text" id="fullName" placeholder="Masukkan nama lengkap">
+            </div>
+            <div class="form-group">
+                <label>Pekerjaan Saat Ini</label>
+                <input type="text" id="jobTitle" placeholder="Contoh: Pegawai Swasta, Freelancer">
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn-cancel" onclick="location.href='admin.html'">Batal</button>
+                <button type="submit" class="btn-save">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_URL = "/api"; 
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+
+    // Tampilkan ID di badge segera saat halaman dimuat
+    if(userId) {
+        document.getElementById('user-id-display').innerText = `USER ID: #${userId}`;
+    }
+
+    async function loadUserData() {
+        if (!userId) {
+            Swal.fire({
+                title: "ID Tidak Ditemukan",
+                text: "Kembali ke dashboard admin.",
+                icon: "error"
+            }).then(() => location.href = 'admin.html');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/users`); 
+            const users = await res.json();
+            // Gunakan loose equality (==) jika ID dari URL berbentuk string dan di API berbentuk number
+            const user = users.find(u => u.id == userId);
+
+            if (user) {
+                document.getElementById('username').value = user.username;
+                document.getElementById('fullName').value = user.fullName || '';
+                document.getElementById('jobTitle').value = user.jobTitle || '';
+            } else {
+                Swal.fire("Data Nihil", "Profil wajib pajak tidak terdaftar di database.", "warning");
+            }
+        } catch (e) {
+            console.error("Gagal sinkronisasi data dengan server.");
+        }
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const updatedData = {
+            fullName: document.getElementById('fullName').value,
+            jobTitle: document.getElementById('jobTitle').value
+        };
+
+        // Loading state
+        Swal.fire({
+            title: 'Menyimpan...',
+            text: 'Sedang memperbarui record database.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const res = await fetch(`${API_URL}/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (res.ok) {
+                Swal.fire({
+                    title: "Berhasil!",
+                    text: "Data wajib pajak telah diperbarui.",
+                    icon: "success",
+                    confirmButtonColor: "#0f172a"
+                }).then(() => {
+                    location.href = 'admin.html';
+                });
+            } else {
+                throw new Error("Gagal menyimpan");
+            }
+        } catch (err) {
+            Swal.fire("Gagal", "Terjadi gangguan pada koneksi server.", "error");
+        }
+    });
+
+    // Jalankan load data saat window selesai dimuat
+    window.onload = loadUserData;
+</script>
+</body>
+</html>

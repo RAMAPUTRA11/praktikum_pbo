@@ -1,0 +1,154 @@
+/* ISI FILE style.css */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Poppins', sans-serif; 
+}
+
+body {
+    background: linear-gradient(135deg, #061e1e 0%, #0d3a3a 100%);
+    min-height: 100vh;
+    color: white;
+}
+
+/* Container & Layout */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+}
+
+/* Glass Card Core */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.hidden { 
+    display: none; 
+}
+
+/* Typography */
+h2, h3, h4 { margin-bottom: 10px; font-weight: 600; }
+p { margin-bottom: 20px; font-size: 0.9em; opacity: 0.8; }
+
+/* Input Styling */
+.input-field {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    outline: none;
+}
+
+/* Button Styling */
+.btn-main {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    background: #fbbf24;
+    color: #1e3a8a;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-main:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+}
+
+/* Components */
+.status-badge {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    display: inline-block;
+}
+
+#total-tax {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #fbbf24;
+    margin: 10px 0;
+}
+
+/* Dashboard Specifics */
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #74f2ce;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.calc-item {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.calc-item:hover {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #74f2ce;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+td, th {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: left;
+}
+
+@media (max-width: 900px) {
+    .dashboard-container { grid-template-columns: 1fr; }
+}
+
+/* Modal Styles */
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+}
+.modal-content {
+    background: #061e1e; margin: 10% auto; padding: 30px; border: 1px solid var(--accent-mint);
+    width: 400px; border-radius: 20px; box-shadow: 0 0 20px rgba(116, 242, 206, 0.2);
+}
+.modal-content h2 { margin-bottom: 20px; color: var(--accent-mint); }
+.input-group { margin-bottom: 20px; }
+.input-group label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+.input-group input { 
+    width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); 
+    color: white; border-radius: 10px; outline: none; 
+}

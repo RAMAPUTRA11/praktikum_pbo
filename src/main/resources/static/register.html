@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Buat Akun Baru</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--white);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            padding: 48px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .logo-box {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--sidebar-navy);
+            margin-bottom: 32px;
+            letter-spacing: -1px;
+        }
+
+        .logo-box span { color: var(--primary-emerald); }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--sidebar-navy);
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary-emerald);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-emerald);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+
+        .footer-text {
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer-text a {
+            color: var(--primary-emerald);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-text a:hover { text-decoration: underline; }
+
+        .back-home {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-home">← Beranda</a>
+
+    <div class="register-card">
+        <div class="logo-box">Tax<span>Flow.</span></div>
+
+        <h1>Mulai Perjalanan Anda</h1>
+        <p class="subtitle">Kelola pajak secara cerdas dan efisien bersama kami</p>
+
+        <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="fullName" placeholder="Contoh: Budi Sudarsono" required>
+        </div>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Pilih username unik" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Min. 8 karakter" required>
+        </div>
+
+        <button class="btn-register" onclick="handleRegister()">Daftar Akun</button>
+
+        <p class="footer-text">
+            Sudah memiliki akun? <a href="login.html">Masuk di sini</a>
+        </p>
+    </div>
+
+    <script>
+        async function handleRegister() {
+            const fullName = document.getElementById('fullName').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if(!fullName || !username || !password) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Semua kolom wajib diisi untuk pendaftaran.',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+
+            // Tampilkan loading
+            Swal.fire({
+                title: 'Sedang Mendaftar...',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, username, password })
+                });
+
+                const result = await response.text();
+
+                if (response.ok) {
+                    Swal.fire({
+                        title: "Registrasi Berhasil!",
+                        text: "Akun Anda telah terdaftar. Silakan masuk.",
+                        icon: "success",
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        window.location.href = "login.html";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Registrasi Gagal',
+                        text: result || 'Terjadi kesalahan saat mendaftar.',
+                        confirmButtonColor: '#0f172a'
+                    });
+                }
+            } catch (error) {
+                console.error("Register Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Sistem',
+                    text: 'Gagal terhubung ke server. Pastikan API backend menyala.',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        }
+
+        // Memungkinkan register dengan menekan tombol Enter
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleRegister();
+        });
+    </script>
+</body>
+</html>

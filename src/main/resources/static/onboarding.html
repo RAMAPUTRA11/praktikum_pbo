@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang | TaxFlow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Inter', sans-serif; 
+        }
+
+        body { 
+            background-color: var(--bg-app); 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            padding: 20px;
+        }
+
+        .onboarding-card { 
+            background: var(--white); 
+            padding: 50px 40px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border-color); 
+            text-align: center; 
+            max-width: 450px; 
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: #ecfdf5;
+            color: var(--primary-emerald);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 25px;
+        }
+
+        h1 { 
+            color: var(--sidebar-navy); 
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        p { 
+            color: var(--text-muted); 
+            margin-bottom: 35px; 
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .btn-activate { 
+            background: var(--primary-emerald); 
+            color: white; 
+            padding: 16px 30px; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 16px;
+            cursor: pointer; 
+            width: 100%; 
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-activate:hover { 
+            transform: translateY(-2px); 
+            background: #059669;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-activate:active {
+            transform: translateY(0);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+
+        .step {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-color);
+        }
+
+        .step.active {
+            background: var(--primary-emerald);
+            width: 24px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-card">
+        <div class="icon-box">🎉</div>
+        <h1>Satu Langkah Lagi!</h1>
+        <p>Akun TaxFlow Anda hampir siap. Klik tombol di bawah untuk melakukan inisialisasi modul pajak dan mengaktifkan dashboard pribadi Anda.</p>
+        
+        <button class="btn-activate" onclick="activateAccount()">Aktifkan Akun Sekarang</button>
+
+        <div class="step-indicator">
+            <div class="step"></div>
+            <div class="step"></div>
+            <div class="step active"></div>
+        </div>
+    </div>
+
+    <script>
+        async function activateAccount() {
+            const userStored = localStorage.getItem('userPajak');
+            if (!userStored) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            const user = JSON.parse(userStored);
+            const userId = user.id;
+
+            // Loading state
+            Swal.fire({
+                title: 'Menyiapkan Environment...',
+                text: 'Sedang mengonfigurasi database fiskal Anda.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const response = await fetch(`/api/tax/onboarding-complete/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    // Update Local Storage agar status onboarded berubah
+                    user.onboarded = true;
+                    localStorage.setItem('userPajak', JSON.stringify(user));
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Aktivasi Berhasil!',
+                        text: 'Selamat datang di ekosistem TaxFlow.',
+                        showConfirmButton: false,
+                        timer: 2000
+                    }).then(() => {
+                        window.location.href = "dashboard.html";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Aktivasi',
+                        text: 'Terjadi kesalahan saat memproses permintaan Anda.',
+                        confirmButtonColor: '#0f172a'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Koneksi Terputus',
+                    text: 'Pastikan server backend Anda berjalan.',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        }
+    </script>
+</body>
+</html>

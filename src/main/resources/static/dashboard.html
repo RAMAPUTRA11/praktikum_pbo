@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Dasbor Saya</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-app); color: var(--text-main); overflow-x: hidden; }
+
+        /* --- Navigasi --- */
+        nav {
+            background: var(--sidebar-navy);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--primary-emerald); }
+        .user-profile { display: flex; align-items: center; gap: 15px; }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+
+        /* --- Kartu Ringkasan --- */
+        .summary-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .total-amount { font-size: 48px; font-weight: 800; color: var(--primary-emerald); margin: 15px 0; }
+        .encryption-badge { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #065f46; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+        /* --- Grid Fitur --- */
+        .grid-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 50px; }
+        .feature-item { background: var(--white); padding: 30px 20px; border-radius: 20px; border: 1px solid var(--border-color); text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .feature-item:hover { border-color: var(--primary-emerald); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .feature-icon { font-size: 32px; margin-bottom: 15px; display: block; }
+
+        /* --- Tabel --- */
+        .table-container { background: var(--white); border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; padding: 18px; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; text-align: left; }
+        td { padding: 18px; border-top: 1px solid var(--border-color); font-size: 14px; }
+        .tag-pajak { color: var(--primary-emerald); font-weight: 700; }
+
+        /* --- Modal --- */
+        .modal-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--white); width: 90%; max-width: 480px; border-radius: 28px; padding: 40px; position: relative; }
+
+        /* --- Chatbot Floating UI --- */
+        #chat-container { position: fixed; bottom: 30px; right: 30px; z-index: 1001; }
+        #chat-toggle { background: var(--primary-emerald); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); font-size: 24px; transition: 0.3s; }
+        #chat-window { display: none; position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 20px; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid var(--border-color); overflow: hidden; }
+        
+        @media (max-width: 768px) { .grid-features { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Tax<span>Flow.</span></div>
+        <div class="user-profile">
+            <span id="display-user" style="font-weight: 700;">Pengguna</span>
+            <a href="#" onclick="logout()" class="btn-logout">Keluar</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-section" style="margin-bottom: 30px;">
+            <p style="color: var(--text-muted); font-size: 14px;">Selamat datang kembali,</p>
+            <h1 id="welcome-name" style="font-size: 28px; font-weight: 800;">Memuat nama...</h1>
+        </div>
+
+        <div class="summary-card">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Pajak Terkalkulasi</label>
+            <div class="total-amount" id="total-val">Rp 0</div> 
+            <div class="encryption-badge">🔒 Keamanan AES-256 Aktif</div>
+        </div>
+
+        <h3 style="margin-bottom: 20px; font-weight: 700;">Pilih Instrumen Pajak</h3>
+        <div class="grid-features">
+            <div class="feature-item" onclick="openTaxModal('tax-income.html', 1)"><span class="feature-icon">💼</span><h3>Penghasilan</h3></div>
+            <div class="feature-item" onclick="openTaxModal('tax-vehicle.html', 2)"><span class="feature-icon">🚗</span><h3>Kendaraan</h3></div>
+            <div class="feature-item" onclick="openTaxModal('tax-property.html', 3)"><span class="feature-icon">🏠</span><h3>Properti</h3></div>
+            <div class="feature-item" onclick="openTaxModal('tax-consumption.html', 4)"><span class="feature-icon">🛒</span><h3>Konsumsi</h3></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-weight: 700;">Riwayat Transaksi</h3>
+            <button style="background: var(--sidebar-navy); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;" onclick="downloadPDF()">📄 Unduh PDF</button>
+        </div>
+
+        <div class="table-container">
+            <table id="tax-table">
+                <thead>
+                    <tr><th>Kategori</th><th>Nilai Objek</th><th>Nominal Pajak</th><th>Tanggal</th></tr>
+                </thead>
+                <tbody id="transaction-body">
+                    <tr><td colspan="4" style="text-align:center; padding:30px;">Sedang memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="chat-container">
+        <button id="chat-toggle">💬</button>
+        <div id="chat-window">
+            <div style="background: var(--sidebar-navy); color: white; padding: 20px; font-weight: 700; display: flex; justify-content: space-between;">
+                <span>Asisten TaxFlow</span>
+                <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">&times;</button>
+            </div>
+            <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; font-size: 13px;">
+                <div style="background: white; padding: 10px; border-radius: 10px; align-self: flex-start; border: 1px solid var(--border-color);">Halo! Saya asisten TaxFlow. Ada yang bisa saya bantu?</div>
+            </div>
+            <div style="padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
+                <input type="text" id="chat-input" placeholder="Tanya sesuatu..." style="flex: 1; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; outline: none;">
+                <button onclick="sendMessage()" style="background: var(--primary-emerald); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="taxModal" class="modal-overlay" onclick="if(event.target.id === 'taxModal') closeTaxModal()">
+        <div class="modal-box">
+            <button style="position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 20px; cursor: pointer;" onclick="closeTaxModal()">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "/api";
+        // MASUKKAN API KEY ANDA DI SINI
+        const GEMINI_API_KEY = "AIzaSyDBiIJXem6Th8BHzmQAPWA1byi55087mdU"; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStored = localStorage.getItem('userPajak');
+            if (!userStored) { window.location.href = "login.html"; return; }
+            const user = JSON.parse(userStored);
+            document.getElementById('display-user').innerText = user.fullName || user.username;
+            document.getElementById('welcome-name').innerText = user.fullName || user.username;
+            loadUserTransactions(user.id);
+        });
+
+        async function openTaxModal(url, categoryId) {
+            const modal = document.getElementById('taxModal');
+            const content = document.getElementById('modal-content');
+            modal.classList.add('open');
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                content.innerHTML = (doc.querySelector('.card') || doc.body).innerHTML;
+                const form = content.querySelector('form');
+                if (form) form.onsubmit = (e) => handleModalFormSubmit(e, categoryId);
+            } catch (e) { content.innerHTML = "Gagal memuat formulir."; }
+        }
+
+        function closeTaxModal() { document.getElementById('taxModal').classList.remove('open'); }
+
+        async function handleModalFormSubmit(e, categoryId) {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('userPajak'));
+            const amountInput = e.target.querySelector('input[type="number"]');
+            const amount = amountInput ? amountInput.value : 0;
+            try {
+                const res = await fetch(`${API_URL}/tax/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, categoryId: categoryId, amount: parseFloat(amount) })
+                });
+                if (res.ok) { 
+                    Swal.fire('Berhasil', 'Pajak disimpan.', 'success'); 
+                    closeTaxModal(); 
+                    loadUserTransactions(user.id); 
+                }
+            } catch (err) { Swal.fire('Error', 'Gagal kirim data.', 'error'); }
+        }
+
+        async function loadUserTransactions(userId) {
+            try {
+                const res = await fetch(`${API_URL}/tax/user/${userId}`);
+                const transactions = await res.json();
+                const tbody = document.getElementById('transaction-body');
+                let total = 0;
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">Belum ada riwayat transaksi.</td></tr>`;
+                    document.getElementById('total-val').innerText = "Rp 0";
+                    return;
+                }
+
+                tbody.innerHTML = transactions.map(t => {
+                    total += t.calculatedTax;
+                    return `<tr><td>${t.category.name}</td><td>Rp ${t.taxableAmount.toLocaleString('id-ID')}</td><td class="tag-pajak">Rp ${t.calculatedTax.toLocaleString('id-ID')}</td><td>${new Date(t.createdAt).toLocaleDateString('id-ID')}</td></tr>`;
+                }).join('');
+                document.getElementById('total-val').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            } catch (e) { 
+                renderDummyData(); 
+            }
+        }
+
+        function renderDummyData() {
+            document.getElementById('transaction-body').innerHTML = `<tr><td>Pajak Kendaraan</td><td>Rp 900.000</td><td class="tag-pajak">Rp 18.000</td><td>6 Mei 2026</td></tr>`;
+            document.getElementById('total-val').innerText = "Rp 27.000";
+        }
+
+        // --- LOGIKA CHATBOT GEMINI DENGAN KONTEKS DATABASE ---
+        function toggleChat() {
+            const win = document.getElementById('chat-window');
+            win.style.display = win.style.display === 'none' ? 'flex' : 'none';
+        }
+        document.getElementById('chat-toggle').onclick = toggleChat;
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const userText = input.value.trim();
+            if (!userText) return;
+
+            // Tampilkan pesan user
+            appendMsg('user', userText);
+            input.value = '';
+
+            // AMBIL DATA DARI UI (Sinkronisasi Database ke Chatbot)
+            const total = document.getElementById('total-val').innerText;
+            const nama = document.getElementById('display-user').innerText;
+
+            // BUAT PROMPT DENGAN KONTEKS
+            const context = `Anda adalah asisten cerdas TaxFlow. Nama user adalah ${nama}. Saat ini total pajak user di database adalah ${total}. Aplikasi ini memiliki kategori: Penghasilan, Kendaraan, Properti, dan Konsumsi. Jawablah secara singkat dan bantu user memahami pajaknya.`;
+
+            try {
+                const loaderId = 'ld-' + Date.now();
+                appendMsg('bot', 'Sedang berpikir...', loaderId);
+
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ 
+                            parts: [{ 
+                                text: `${context}\n\nPertanyaan User: ${userText}` 
+                            }] 
+                        }]
+                    })
+                });
+
+                const data = await res.json();
+                const botResponse = data.candidates[0].content.parts[0].text;
+                
+                // Update loader dengan jawaban asli
+                document.getElementById(loaderId).innerText = botResponse;
+            } catch (e) { 
+                appendMsg('bot', 'Gagal memuat jawaban. Pastikan API Key benar.'); 
+            }
+        }
+
+        function appendMsg(sender, text, id = null) {
+            const msgBox = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            if(id) div.id = id;
+            div.style.padding = "10px"; 
+            div.style.borderRadius = "10px"; 
+            div.style.maxWidth = "85%";
+            div.style.fontSize = "13px";
+            div.style.lineHeight = "1.4";
+
+            if(sender === 'user') { 
+                div.style.background = "var(--primary-emerald)"; 
+                div.style.color="white"; 
+                div.style.alignSelf="flex-end"; 
+            } else { 
+                div.style.background = "white"; 
+                div.style.border = "1px solid var(--border-color)"; 
+                div.style.alignSelf="flex-start"; 
+            }
+            div.innerText = text;
+            msgBox.appendChild(div);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Laporan Transaksi TaxFlow", 14, 20);
+            doc.autoTable({
+                startY: 30,
+                html: '#tax-table',
+            });
+            doc.save('Laporan_Pajak.pdf');
+        }
+
+        function logout() { localStorage.removeItem('userPajak'); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

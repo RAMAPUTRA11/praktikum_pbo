@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Panel Administrasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-app: #f1f5f9;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-app); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px; background: var(--sidebar-navy); color: white;
+            padding: 40px 24px; display: flex; flex-direction: column; position: fixed; height: 100vh;
+        }
+        .logo { font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 40px; letter-spacing: -0.5px; }
+        .logo span { color: var(--primary-emerald); }
+
+        .nav-group { margin-bottom: 30px; }
+        .nav-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 15px; display: block; }
+        
+        .nav-link {
+            padding: 12px 16px; border-radius: 8px; color: #cbd5e1; text-decoration: none;
+            transition: 0.2s; margin-bottom: 4px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+        }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-link.active { background: var(--primary-emerald); color: white; font-weight: 500; }
+
+        /* MAIN CONTENT */
+        .main-content { margin-left: 280px; flex: 1; padding: 40px 5%; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .active-view { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { margin-bottom: 30px; }
+        h1 { font-size: 24px; font-weight: 600; color: var(--sidebar-navy); }
+
+        /* STAT CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: var(--white); border: 1px solid var(--border-color); padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-card span { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card h3 { font-size: 26px; margin-top: 8px; color: var(--sidebar-navy); font-weight: 700; }
+
+        /* GLASS CARD / TABLES */
+        .glass-card { background: var(--white); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card-header h2 { font-size: 16px; font-weight: 600; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 16px 24px; color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); font-size: 14px; vertical-align: middle; }
+        
+        .payer-tag { font-weight: 600; color: var(--sidebar-navy); }
+        .tax-tag { color: var(--primary-emerald); font-weight: 700; }
+        .status-paid { color: #10b981; font-weight: 600; font-size: 12px; }
+
+        /* BUTTONS */
+        .btn { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; border: 1px solid transparent; transition: 0.2s; }
+        .btn-edit { background: #fff; border-color: var(--border-color); color: var(--text-main); }
+        .btn-edit:hover { background: #f1f5f9; }
+        .btn-del { background: #fef2f2; color: var(--danger); border-color: #fee2e2; }
+        .btn-del:hover { background: var(--danger); color: white; }
+
+        /* SETTINGS */
+        .form-control { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; margin-top: 8px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--primary-emerald); background: #fff; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="logo">Tax<span>Flow</span> Admin</div>
+        
+        <div class="nav-group">
+            <span class="nav-label">Menu Utama</span>
+            <div class="nav-link active" onclick="switchTab('dashboard')">📊 Ringkasan Dasbor</div>
+            <div class="nav-link" onclick="switchTab('transactions')">📑 Audit Transaksi</div>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-label">Konfigurasi Sistem</span>
+            <div class="nav-link" onclick="switchTab('tax-rates')">⚖️ Tarif Pajak</div>
+            <div class="nav-link" onclick="switchTab('settings')">⚙️ Pengaturan</div>
+        </div>
+
+        <div style="margin-top: auto;">
+            <a href="index.html" class="nav-link" style="color: #fda4af;">🚪 Keluar Sistem</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section id="dashboard" class="view-section active-view">
+            <header><h1>Ikhtisar Administrator</h1></header>
+
+            <div class="stats-grid">
+                <div class="stat-card"><span>Total Wajib Pajak</span><h3 id="stat-users">0</h3></div>
+                <div class="stat-card"><span>Total Pajak Terkumpul</span><h3 id="stat-tax">Rp 0</h3></div>
+                <div class="stat-card"><span>Status Sistem</span><h3 style="color: var(--primary-emerald);">Stabil</h3></div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header"><h2>Direktori Wajib Pajak</h2></div>
+                <table>
+                    <thead>
+                        <tr><th>Username</th><th>Nama Lengkap</th><th>Pekerjaan</th><th style="text-align:right">Tindakan</th></tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="transactions" class="view-section">
+            <header><h1>Log Audit: Transaksi</h1></header>
+            <div class="glass-card">
+                <div class="card-header"><h2>Seluruh Rekaman Transaksi</h2></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pembayar</th>
+                            <th>Kategori Pajak</th>
+                            <th>Nilai Objek (DPP)</th>
+                            <th>Nominal Pajak</th>
+                            <th>Status</th>
+                            <th style="text-align:right">Opsi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-transactions-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tax-rates" class="view-section">
+            <header><h1>Konfigurasi Fiskal</h1></header>
+            <div class="glass-card">
+                <div class="card-header"><h2>Tarif Pajak Aktif</h2></div>
+                <table>
+                    <thead><tr><th>Deskripsi Kategori</th><th>Tarif Saat Ini</th><th>Pembaruan Terakhir</th><th>Aksi</th></tr></thead>
+                    <tbody>
+                        <tr><td>PPh Pasal 21 (Penghasilan)</td><td><strong>5.0%</strong></td><td>01 Mei 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
+                        <tr><td>Pajak Kendaraan Bermotor (PKB)</td><td><strong>2.0%</strong></td><td>12 Jan 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
+                        <tr><td>PBB (Properti & Bangunan)</td><td><strong>0.1%</strong></td><td>20 Feb 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
+                        <tr><td>PPN (Pajak Konsumsi)</td><td><strong>11.0%</strong></td><td>01 Apr 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="settings" class="view-section">
+            <header><h1>Pengaturan Sistem</h1></header>
+            
+            <div class="glass-card" style="padding: 30px; margin-bottom: 30px;">
+                <h2 style="margin-bottom:20px">🛡️ Keamanan Admin</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">NAMA ADMINISTRATOR</label>
+                        <input type="text" class="form-control" value="Master Admin TaxFlow">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">EMAIL PEMULIHAN</label>
+                        <input type="email" class="form-control" value="admin-ops@taxflow.id">
+                    </div>
+                </div>
+                <button class="btn btn-edit" style="margin-top: 24px; background: var(--sidebar-navy); color:white; border:none" onclick="Swal.fire('Berhasil', 'Profil sistem telah diperbarui.', 'success')">Simpan Perubahan</button>
+            </div>
+
+            <div class="glass-card" style="padding: 0 30px;">
+                <div class="settings-row">
+                    <div>
+                        <p style="font-weight: 600; font-size: 14px;">Mode Pemeliharaan (Maintenance)</p>
+                        <p style="font-size: 12px; color: var(--text-muted);">Batasi akses pengguna selama proses pembaruan data.</p>
+                    </div>
+                    <input type="checkbox" style="width:20px; height:20px; accent-color: var(--primary-emerald);">
+                </div>
+                <div class="settings-row" style="border:none">
+                    <div>
+                        <p style="font-weight: 600; font-size: 14px;">Laporan Fiskal Otomatis</p>
+                        <p style="font-size: 12px; color: var(--text-muted);">Kirim ringkasan pajak bulanan ke email pengguna secara otomatis.</p>
+                    </div>
+                    <input type="checkbox" checked style="width:20px; height:20px; accent-color: var(--primary-emerald);">
+                </div>
+            </div>
+        </section>
+    </main>
+
+<script>
+    const API_URL = "/api/admin";
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-view'));
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+
+        const currentTab = document.getElementById(tabId);
+        if(currentTab) currentTab.classList.add('active-view');
+        
+        if(event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
+
+        if(tabId === 'transactions') loadAllTransactions();
+        if(tabId === 'dashboard') initDashboard();
+    }
+
+    async function initDashboard() {
+        try {
+            const res = await fetch(`${API_URL}/users`);
+            const users = await res.json();
+            document.getElementById('stat-users').innerText = users.length;
+            
+            const body = document.getElementById('user-table-body');
+            body.innerHTML = users.map(u => `
+                <tr>
+                    <td><span class="payer-tag">@${u.username}</span></td>
+                    <td>${u.fullName || '-'}</td>
+                    <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600">${u.jobTitle || 'Umum'}</span></td>
+                    <td style="text-align:right">
+                        <div class="btn-group" style="display:flex; justify-content: flex-end; gap:8px">
+                            <button class="btn btn-edit" onclick="Swal.fire('Info', 'Fitur manajemen profil sedang disiapkan.', 'info')">Kelola</button>
+                            <button class="btn btn-del" onclick="deleteUser(${u.id})">Hapus</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:30px">Tidak ada wajib pajak yang ditemukan.</td></tr>';
+            
+            loadAllTransactions(true); 
+        } catch (e) { console.error("Dashboard load failed", e); }
+    }
+
+    async function loadAllTransactions(isDashboardUpdate = false) {
+        try {
+            const res = await fetch(`${API_URL}/transactions`);
+            const data = await res.json();
+            
+            let totalCollected = 0;
+            const tableRows = data.map(t => {
+                totalCollected += (t.calculatedTax || 0);
+                return `
+                    <tr id="trx-${t.id}">
+                        <td><span class="payer-tag">@${t.user ? t.user.username : 'Guest'}</span></td>
+                        <td>${t.category ? t.category.name : 'Tanpa Kategori'}</td>
+                        <td>Rp ${(t.taxableAmount || 0).toLocaleString('id-ID')}</td>
+                        <td><span class="tax-tag">Rp ${(t.calculatedTax || 0).toLocaleString('id-ID')}</span></td>
+                        <td><span class="status-paid">● Lunas</span></td>
+                        <td style="text-align:right">
+                            <button class="btn btn-del" onclick="deleteTransaction(${t.id})">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if(!isDashboardUpdate) {
+                const trxBody = document.getElementById('all-transactions-body');
+                if(trxBody) trxBody.innerHTML = tableRows || '<tr><td colspan="6" style="text-align:center; padding:30px">Belum ada catatan transaksi.</td></tr>';
+            }
+            
+            const statTax = document.getElementById('stat-tax');
+            if(statTax) statTax.innerText = `Rp ${totalCollected.toLocaleString('id-ID')}`;
+            
+        } catch (e) { console.error("Audit log failed", e); }
+    }
+
+    async function deleteTransaction(id) {
+        const result = await Swal.fire({
+            title: 'Hapus Transaksi?',
+            text: "Data ini akan dihapus secara permanen dari log audit.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Hapus Sekarang',
+            cancelButtonText: 'Batal'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    await Swal.fire('Terhapus!', 'Catatan transaksi telah dihapus.', 'success');
+                    loadAllTransactions(); 
+                } else {
+                    Swal.fire('Error', 'Gagal menghapus data dari server.', 'error');
+                }
+            } catch (e) { Swal.fire('Error', 'Gagal menghubungi server.', 'error'); }
+        }
+    }
+
+    async function deleteUser(id) {
+        const result = await Swal.fire({
+            title: 'Hapus Akun?',
+            text: "Wajib pajak akan dihapus secara permanen dari database.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Hapus User'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    await Swal.fire('Berhasil', 'Akun telah dihapus dari sistem.', 'success');
+                    initDashboard();
+                } else {
+                    Swal.fire('Error', 'Gagal menghapus user.', 'error');
+                }
+            } catch (e) { Swal.fire('Error', 'Gagal menghubungi server.', 'error'); }
+        }
+    }
+
+    window.onload = initDashboard;
+</script>
+</body>
+</html>

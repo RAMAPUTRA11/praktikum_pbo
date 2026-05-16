@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Mode Tamu (Simulasi)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-app: #f8fafc;
+            --sidebar-navy: #0f172a;
+            --primary-emerald: #10b981;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-app); color: var(--text-main); }
+
+        /* --- Navbar --- */
+        nav {
+            background: #1e293b; /* Warna sedikit berbeda untuk tanda mode tamu */
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo { font-size: 22px; font-weight: 800; }
+        .logo span { color: var(--primary-emerald); }
+
+        .guest-badge {
+            background: #f59e0b;
+            color: #451a03;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .btn-register-now {
+            background: var(--primary-emerald);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        /* --- Layout --- */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        
+        .alert-banner {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #92400e;
+            font-size: 14px;
+        }
+
+        .summary-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .total-amount { font-size: 48px; font-weight: 800; color: var(--primary-emerald); margin: 15px 0; }
+
+        /* --- Grid --- */
+        .grid-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 50px; }
+        .feature-item {
+            background: var(--white);
+            padding: 30px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .feature-item:hover { transform: translateY(-5px); border-color: var(--primary-emerald); }
+        .feature-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+
+        /* --- Table --- */
+        .table-container { background: var(--white); border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; padding: 18px; font-size: 11px; text-transform: uppercase; color: var(--text-muted); text-align: left; }
+        td { padding: 18px; border-top: 1px solid var(--border-color); font-size: 14px; }
+        .tag-pajak { color: var(--primary-emerald); font-weight: 700; }
+
+        .btn-pdf { background: var(--sidebar-navy); color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="logo">Tax<span>Flow.</span></div>
+            <span class="guest-badge">Mode Tamu</span>
+        </div>
+        <a href="register.html" class="btn-register-now">Daftar Akun Gratis</a>
+    </nav>
+
+    <div class="container">
+        <div class="alert-banner">
+            <span><strong>Info:</strong> Data di halaman ini hanya simulasi dan akan terhapus jika Anda membersihkan browser.</span>
+            <a href="register.html" style="color: #b45309; font-weight: 700;">Daftar untuk simpan permanen →</a>
+        </div>
+
+        <div class="summary-card">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Estimasi Total Pajak (Simulasi)</label>
+            <div class="total-amount" id="total-val">Rp 0</div>
+        </div>
+
+        <h3 style="margin-bottom: 20px;">Kalkulator Pajak Cepat</h3>
+        <div class="grid-features">
+            <div class="feature-item" onclick="simulateTax('Penghasilan', 0.05)">
+                <span class="feature-icon">💼</span>
+                <h3>Penghasilan</h3>
+            </div>
+            <div class="feature-item" onclick="simulateTax('Kendaraan', 0.02)">
+                <span class="feature-icon">🚗</span>
+                <h3>Kendaraan</h3>
+            </div>
+            <div class="feature-item" onclick="simulateTax('Properti', 0.005)">
+                <span class="feature-icon">🏠</span>
+                <h3>Properti</h3>
+            </div>
+            <div class="feature-item" onclick="simulateTax('Konsumsi', 0.11)">
+                <span class="feature-icon">🛒</span>
+                <h3>Konsumsi (PPN)</h3>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Riwayat Simulasi</h3>
+            <button class="btn-pdf" onclick="resetSimulasi()" style="background: #ef4444;">Reset Data</button>
+        </div>
+
+        <div class="table-container">
+            <table id="tax-table">
+                <thead>
+                    <tr>
+                        <th>Kategori</th>
+                        <th>Nilai Objek</th>
+                        <th>Nominal Pajak</th>
+                        <th>Waktu Simulasi</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-body">
+                    <!-- Data masuk di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Gunakan LocalStorage untuk simulasi agar terasa "nyata" bagi publik
+        let guestData = JSON.parse(localStorage.getItem('guest_transactions')) || [];
+
+        document.addEventListener('DOMContentLoaded', renderTable);
+
+        async function simulateTax(category, rate) {
+            const { value: amount } = await Swal.fire({
+                title: `Kalkulasi Pajak ${category}`,
+                input: 'number',
+                inputLabel: 'Masukkan Nilai Objek (Rp)',
+                inputPlaceholder: 'Contoh: 10000000',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981'
+            });
+
+            if (amount) {
+                const tax = amount * rate;
+                const newRecord = {
+                    category: category,
+                    amount: parseFloat(amount),
+                    tax: tax,
+                    date: new Date().toLocaleString('id-ID')
+                };
+
+                guestData.unshift(newRecord); // Tambah ke atas
+                localStorage.setItem('guest_transactions', JSON.stringify(guestData));
+                
+                Swal.fire('Berhasil', `Pajak ${category} Anda: Rp ${tax.toLocaleString('id-ID')}`, 'success');
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('transaction-body');
+            const totalDisplay = document.getElementById('total-val');
+            
+            if (guestData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--text-muted);">Belum ada simulasi. Klik ikon di atas untuk mencoba.</td></tr>`;
+                totalDisplay.innerText = "Rp 0";
+                return;
+            }
+
+            let total = 0;
+            tbody.innerHTML = guestData.map(item => {
+                total += item.tax;
+                return `
+                    <tr>
+                        <td>${item.category}</td>
+                        <td>Rp ${item.amount.toLocaleString('id-ID')}</td>
+                        <td class="tag-pajak">Rp ${item.tax.toLocaleString('id-ID')}</td>
+                        <td>${item.date}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            totalDisplay.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+
+        function resetSimulasi() {
+            Swal.fire({
+                title: 'Reset data?',
+                text: "Semua riwayat simulasi akan dihapus.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    guestData = [];
+                    localStorage.removeItem('guest_transactions');
+                    renderTable();
+                }
+            })
+        }
+    </script>
+</body>
+</html>

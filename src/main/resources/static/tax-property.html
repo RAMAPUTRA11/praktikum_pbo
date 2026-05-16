@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxFlow | Pajak Penghasilan</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #0f172a; --emerald: #10b981; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { color: var(--navy); margin-bottom: 10px; font-weight: 800; }
+        p { color: #64748b; font-size: 14px; margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--navy); text-transform: uppercase; }
+        input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; transition: 0.2s; }
+        input:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+        button { width: 100%; padding: 14px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #059669; transform: translateY(-2px); }
+        .btn-back { display: block; text-align: center; margin-top: 20px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🏠 Properti</h2>
+        <p>Kalkulasi pajak properti bulanan Anda.</p>
+        <form id="taxForm">
+            <label>Nilai Properti (Rp)</label>
+            <input type="number" id="amount" placeholder="Masukkan nominal..." required>
+            <button type="submit">Proses & Simpan</button>
+        </form>
+        <a href="dashboard.html" class="btn-back">← Kembali ke Dashboard</a>
+    </div>
+
+    <script>
+        // Check Login
+        const userStored = localStorage.getItem('userPajak');
+        if (!userStored) window.location.href = 'login.html';
+        const user = JSON.parse(userStored);
+
+        document.getElementById('taxForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('amount').value;
+
+            try {
+                const response = await fetch('/api/tax/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        categoryId: 3, // ID Properti
+                        amount: parseFloat(amount)
+                    })
+                });
+
+                if (response.ok) {
+                    Swal.fire({ icon: 'success', title: 'Data Disimpan', text: 'Riwayat transaksi telah diperbarui.', confirmButtonColor: '#10b981' })
+                    .then(() => window.location.href = 'dashboard.html');
+                } else {
+                    throw new Error('Gagal menyimpan');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
