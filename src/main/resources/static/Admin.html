@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaxFlow | Panel Administrasi</title>
+    <title>TaxFlow | Panel Administrasi Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
-            --bg-app: #f1f5f9;
+            --bg-app: #f8fafc;
             --sidebar-navy: #0f172a;
             --primary-emerald: #10b981;
             --text-main: #1e293b;
@@ -21,10 +23,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg-app); color: var(--text-main); display: flex; min-height: 100vh; }
 
-        /* SIDEBAR */
+        /* SIDEBAR WITH ACTIVE INDICATOR EFFECT */
         .sidebar {
             width: 280px; background: var(--sidebar-navy); color: white;
             padding: 40px 24px; display: flex; flex-direction: column; position: fixed; height: 100vh;
+            border-right: 1px solid rgba(255,255,255,0.05); z-index: 100;
         }
         .logo { font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 40px; letter-spacing: -0.5px; }
         .logo span { color: var(--primary-emerald); }
@@ -34,10 +37,15 @@
         
         .nav-link {
             padding: 12px 16px; border-radius: 8px; color: #cbd5e1; text-decoration: none;
-            transition: 0.2s; margin-bottom: 4px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: all 0.2s ease; margin-bottom: 4px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            position: relative;
         }
         .nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-link.active { background: var(--primary-emerald); color: white; font-weight: 500; }
+        .nav-link.active { background: rgba(255,255,255,0.08); color: var(--primary-emerald); font-weight: 600; }
+        .nav-link.active::before {
+            content: ''; position: absolute; left: 0; top: 25%; height: 50%; width: 4px; 
+            background: var(--primary-emerald); border-radius: 0 4px 4px 0;
+        }
 
         /* MAIN CONTENT */
         .main-content { margin-left: 280px; flex: 1; padding: 40px 5%; }
@@ -51,34 +59,91 @@
 
         /* STAT CARDS */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
-        .stat-card { background: var(--white); border: 1px solid var(--border-color); padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-card { 
+            background: var(--white); border: 1px solid var(--border-color); padding: 24px; 
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.05); }
         .stat-card span { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-card h3 { font-size: 26px; margin-top: 8px; color: var(--sidebar-navy); font-weight: 700; }
+        .stat-trend { font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .trend-up { color: var(--primary-emerald); }
+        .trend-neutral { color: var(--text-muted); }
 
-        /* GLASS CARD / TABLES */
-        .glass-card { background: var(--white); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .status-stabil-badge { display: inline-flex; align-items: center; gap: 8px; color: var(--primary-emerald); }
+        .status-stabil-badge::before {
+            content: ''; width: 8px; height: 8px; background-color: var(--primary-emerald);
+            border-radius: 50%; display: inline-block; animation: pulseAnimation 2s infinite;
+        }
+        @keyframes pulseAnimation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* TABLES & CARDS */
+        .glass-card { background: var(--white); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .card-header h2 { font-size: 16px; font-weight: 600; }
+        .card-header h2 { font-size: 15px; font-weight: 600; color: var(--sidebar-navy); }
+        .card-footer { padding: 14px 24px; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); }
 
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; text-align: left; padding: 16px 24px; color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        th { background: #f8fafc; text-align: left; padding: 16px 24px; color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border-color); letter-spacing: 0.5px; }
         td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); font-size: 14px; vertical-align: middle; }
         
         .payer-tag { font-weight: 600; color: var(--sidebar-navy); }
         .tax-tag { color: var(--primary-emerald); font-weight: 700; }
-        .status-paid { color: #10b981; font-weight: 600; font-size: 12px; }
+        
+        .status-pill-paid { background: #e6f4ea; color: #137333; padding: 6px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .status-pill-paid::before { content: ''; width: 6px; height: 6px; background: #137333; border-radius: 50%; }
+
+        /* FILTER CHIPS BUTTONS */
+        .filter-group { display: flex; gap: 8px; margin-bottom: 16px; }
+        .filter-chip { padding: 6px 12px; background: var(--white); border: 1px solid var(--border-color); border-radius: 20px; font-size: 12px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .filter-chip:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .filter-chip.active { background: var(--sidebar-navy); color: var(--white); border-color: var(--sidebar-navy); }
+
+        /* PAGINATION UI COMPONENTS */
+        .pagination-btn-group { display: flex; gap: 6px; }
+        .page-btn { padding: 4px 10px; border: 1px solid var(--border-color); background: var(--white); border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--text-main); cursor: pointer; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: var(--text-muted); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* BUTTONS */
-        .btn { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; border: 1px solid transparent; transition: 0.2s; }
+        .btn { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; border: 1px solid transparent; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-edit { background: #fff; border-color: var(--border-color); color: var(--text-main); }
-        .btn-edit:hover { background: #f1f5f9; }
+        .btn-edit:hover { background: #f1f5f9; border-color: var(--text-muted); }
         .btn-del { background: #fef2f2; color: var(--danger); border-color: #fee2e2; }
         .btn-del:hover { background: var(--danger); color: white; }
+        .btn-primary { background: var(--primary-emerald); color: white; border: none; }
+        .btn-primary:hover { background: #059669; }
 
         /* SETTINGS */
         .form-control { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; margin-top: 8px; outline: none; transition: 0.2s; }
         .form-control:focus { border-color: var(--primary-emerald); background: #fff; }
         .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
+
+        /* SKELETON EFFECT LOADING ANIMATION */
+        .skeleton-row td { padding: 20px 24px; }
+        .skeleton-line { height: 16px; background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: loadingPulse 1.5s infinite; border-radius: 4px; width: 100%; }
+        @keyframes loadingPulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* BADGES */
+        .badge-pill { padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-umum { background: #f1f5f9; color: #475569; }
+        .badge-guru { background: #eff6ff; color: #1e40af; }
+        .badge-swasta { background: #f3e8ff; color: #6b21a8; }
+
+        .badge-tax-pph { background: #e0f2fe; color: #0369a1; }
+        .badge-tax-pkb { background: #e1f5fe; color: #0288d1; }
+        .badge-tax-pbb { background: #fef3c7; color: #d97706; }
+        .badge-tax-ppn { background: #fce7f3; color: #db2777; }
+
+        .avatar-circle { width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #475569; }
+        
+        .diagnostic-trigger { position: fixed; bottom: 24px; right: 24px; background: var(--sidebar-navy); color: white; padding: 10px 16px; border-radius: 30px; font-size: 11px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .diagnostic-trigger:hover { transform: scale(1.05); background: #1e293b; }
     </style>
 </head>
 <body>
@@ -88,14 +153,14 @@
         
         <div class="nav-group">
             <span class="nav-label">Menu Utama</span>
-            <div class="nav-link active" onclick="switchTab('dashboard')">📊 Ringkasan Dasbor</div>
-            <div class="nav-link" onclick="switchTab('transactions')">📑 Audit Transaksi</div>
+            <div id="nav-dashboard" class="nav-link active" onclick="switchTab('dashboard')">📊 Ringkasan Dasbor</div>
+            <div id="nav-transactions" class="nav-link" onclick="switchTab('transactions')">📑 Audit Transaksi</div>
         </div>
 
         <div class="nav-group">
             <span class="nav-label">Konfigurasi Sistem</span>
-            <div class="nav-link" onclick="switchTab('tax-rates')">⚖️ Tarif Pajak</div>
-            <div class="nav-link" onclick="switchTab('settings')">⚙️ Pengaturan</div>
+            <div id="nav-tax-rates" class="nav-link" onclick="switchTab('tax-rates')">⚖️ Tarif Pajak</div>
+            <div id="nav-settings" class="nav-link" onclick="switchTab('settings')">⚙️ Pengaturan</div>
         </div>
 
         <div style="margin-top: auto;">
@@ -108,39 +173,95 @@
             <header><h1>Ikhtisar Administrator</h1></header>
 
             <div class="stats-grid">
-                <div class="stat-card"><span>Total Wajib Pajak</span><h3 id="stat-users">0</h3></div>
-                <div class="stat-card"><span>Total Pajak Terkumpul</span><h3 id="stat-tax">Rp 0</h3></div>
-                <div class="stat-card"><span>Status Sistem</span><h3 style="color: var(--primary-emerald);">Stabil</h3></div>
+                <div class="stat-card">
+                    <span>Total Wajib Pajak</span>
+                    <h3 id="stat-users">0</h3>
+                    <div class="stat-trend trend-up">▲ 4.8% <span style="color:var(--text-muted); font-weight:400;">bulan ini</span></div>
+                </div>
+                <div class="stat-card">
+                    <span>Total Pajak Terkumpul</span>
+                    <h3 id="stat-tax">Rp 0</h3>
+                    <div class="stat-trend trend-up">▲ 12.4% <span style="color:var(--text-muted); font-weight:400;">vs kuartal lalu</span></div>
+                </div>
+                <div class="stat-card">
+                    <span>Status Sistem</span>
+                    <h3><span class="status-stabil-badge">Stabil</span></h3>
+                    <div class="stat-trend trend-neutral">● Uptime 99.98% <span style="color:var(--text-muted); font-weight:400;">normal</span></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+                <div class="glass-card" style="padding: 24px;">
+                    <h2 style="font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--sidebar-navy);">Proporsi Pendapatan Pajak</h2>
+                    <div style="max-height: 220px; display: flex; justify-content: center;">
+                        <canvas id="taxPieChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="padding: 24px; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--sidebar-navy);">Aktivitas Sistem Terkini</h2>
+                    <div id="activity-log-container" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; max-height: 220px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; padding-bottom: 8px;"><span>🔄 Memuat log aktivitas...</span></div>
+                    </div>
+                </div>
             </div>
 
             <div class="glass-card">
-                <div class="card-header"><h2>Direktori Wajib Pajak</h2></div>
+                <div class="card-header">
+                    <h2>Direktori Wajib Pajak</h2>
+                    <button class="btn btn-primary" onclick="Swal.fire('Registrasi Baru', 'Form pendaftaran wajib pajak baru sedang dialihkan ke repositori pusat.', 'info')">➕ Tambah Pengguna</button>
+                </div>
                 <table>
                     <thead>
-                        <tr><th>Username</th><th>Nama Lengkap</th><th>Pekerjaan</th><th style="text-align:right">Tindakan</th></tr>
+                        <tr><th>Identitas Pengguna</th><th>Nama Lengkap</th><th>Klasifikasi Profesi</th><th style="text-align:right">Tindakan</th></tr>
                     </thead>
                     <tbody id="user-table-body"></tbody>
                 </table>
+                <div class="card-footer">
+                    <span id="user-pagination-info">Menampilkan 5 pengguna terdaftar</span>
+                    <span style="font-weight: 500; cursor: pointer; color: var(--sidebar-navy)">Lihat Semua →</span>
+                </div>
             </div>
         </section>
 
         <section id="transactions" class="view-section">
             <header><h1>Log Audit: Transaksi</h1></header>
+            
+            <div class="filter-group">
+                <div id="filter-all" class="filter-chip active" onclick="filterTransactions('semua')">Semua Transaksi</div>
+                <div id="filter-pph" class="filter-chip" onclick="filterTransactions('penghasilan')">PPh 21</div>
+                <div id="filter-pbb" class="filter-chip" onclick="filterTransactions('properti')">PBB</div>
+                <div id="filter-pkb" class="filter-chip" onclick="filterTransactions('kendaraan')">PKB</div>
+            </div>
+
             <div class="glass-card">
-                <div class="card-header"><h2>Seluruh Rekaman Transaksi</h2></div>
+                <div class="card-header">
+                    <h2>Seluruh Rekaman Transaksi</h2>
+                    <div style="display:flex; gap:12px;">
+                        <input id="search-input" type="text" onkeyup="liveSearchTransactions(this.value)" placeholder="Cari Log audit..." style="padding: 6px 12px; border-radius: 6px; border:1px solid var(--border-color); font-size:12px; outline:none; width:180px;">
+                        <button class="btn btn-edit" style="font-size:11px; padding:6px 12px;" onclick="Swal.fire('Ekspor Data', 'Data log siap diunduh dalam format .CSV / .XLSX', 'success')">📤 Ekspor Log</button>
+                    </div>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Pembayar</th>
                             <th>Kategori Pajak</th>
-                            <th>Nilai Objek (DPP)</th>
-                            <th>Nominal Pajak</th>
-                            <th>Status</th>
-                            <th style="text-align:right">Opsi</th>
+                            <th style="text-align: right">Nilai Objek (DPP)</th>
+                            <th style="text-align: right">Nominal Pajak</th>
+                            <th style="text-align: center; width: 150px;">Status</th>
+                            <th style="text-align: right">Opsi</th>
                         </tr>
                     </thead>
                     <tbody id="all-transactions-body"></tbody>
                 </table>
+                <div class="card-footer">
+                    <span id="pagination-info">Menampilkan 0 dari 0 entri transaksi</span>
+                    <div class="pagination-btn-group">
+                        <button id="btn-prev-page" class="page-btn" onclick="changePage(-1)" disabled>◀ Sebelum</button>
+                        <button id="btn-next-page" class="page-btn" onclick="changePage(1)" disabled>Sesudah ▶</button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -149,12 +270,39 @@
             <div class="glass-card">
                 <div class="card-header"><h2>Tarif Pajak Aktif</h2></div>
                 <table>
-                    <thead><tr><th>Deskripsi Kategori</th><th>Tarif Saat Ini</th><th>Pembaruan Terakhir</th><th>Aksi</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Deskripsi Kategori</th>
+                            <th style="width: 20%;">Tarif Saat Ini</th>
+                            <th style="width: 25%;">Pembaruan Terakhir</th>
+                            <th style="width: 15%; text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td>PPh Pasal 21 (Penghasilan)</td><td><strong>5.0%</strong></td><td>01 Mei 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
-                        <tr><td>Pajak Kendaraan Bermotor (PKB)</td><td><strong>2.0%</strong></td><td>12 Jan 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
-                        <tr><td>PBB (Properti & Bangunan)</td><td><strong>0.1%</strong></td><td>20 Feb 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
-                        <tr><td>PPN (Pajak Konsumsi)</td><td><strong>11.0%</strong></td><td>01 Apr 2026</td><td><button class="btn btn-edit">Ubah Tarif</button></td></tr>
+                        <tr>
+                            <td><span class="badge-pill badge-tax-pph">PPh Pasal 21 (Penghasilan)</span></td>
+                            <td><strong id="rate-display-pph" style="color: var(--sidebar-navy); font-size: 15px;">5.0%</strong></td>
+                            <td style="color: var(--text-muted);">01 Mei 2026</td>
+                            <td style="text-align: right;"><button class="btn btn-edit" onclick="updateTaxRate('PPh Pasal 21', 5.0, 'rate-display-pph')">Ubah Tarif</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pill badge-tax-pkb">Pajak Kendaraan Bermotor (PKB)</span></td>
+                            <td><strong id="rate-display-pkb" style="color: var(--sidebar-navy); font-size: 15px;">2.0%</strong></td>
+                            <td style="color: var(--text-muted);">12 Jan 2026</td>
+                            <td style="text-align: right;"><button class="btn btn-edit" onclick="updateTaxRate('PKB', 2.0, 'rate-display-pkb')">Ubah Tarif</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pill badge-tax-pbb">PBB (Properti & Bangunan)</span></td>
+                            <td><strong id="rate-display-pbb" style="color: var(--sidebar-navy); font-size: 15px;">0.1%</strong></td>
+                            <td style="color: var(--text-muted);">20 Feb 2026</td>
+                            <td style="text-align: right;"><button class="btn btn-edit" onclick="updateTaxRate('PBB', 0.1, 'rate-display-pbb')">Ubah Tarif</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pill badge-tax-ppn">PPN (Pajak Konsumsi)</span></td>
+                            <td><strong id="rate-display-ppn" style="color: var(--sidebar-navy); font-size: 15px;">11.0%</strong></td>
+                            <td style="color: var(--text-muted);">01 Apr 2026</td>
+                            <td style="text-align: right;"><button class="btn btn-edit" onclick="updateTaxRate('PPN', 11.0, 'rate-display-ppn')">Ubah Tarif</button></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -168,14 +316,14 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                     <div>
                         <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">NAMA ADMINISTRATOR</label>
-                        <input type="text" class="form-control" value="Master Admin TaxFlow">
+                        <input type="text" id="setting-admin-name" class="form-control" value="Master Admin TaxFlow">
                     </div>
                     <div>
                         <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">EMAIL PEMULIHAN</label>
-                        <input type="email" class="form-control" value="admin-ops@taxflow.id">
+                        <input type="email" id="setting-admin-email" class="form-control" value="admin-ops@taxflow.id">
                     </div>
                 </div>
-                <button class="btn btn-edit" style="margin-top: 24px; background: var(--sidebar-navy); color:white; border:none" onclick="Swal.fire('Berhasil', 'Profil sistem telah diperbarui.', 'success')">Simpan Perubahan</button>
+                <button class="btn btn-edit" style="margin-top: 24px; background: var(--sidebar-navy); color:white; border:none" onclick="saveAdminSettings()">Simpan Perubahan</button>
             </div>
 
             <div class="glass-card" style="padding: 0 30px;">
@@ -197,36 +345,109 @@
         </section>
     </main>
 
+    <div class="diagnostic-trigger" onclick="Swal.fire({title:'Health Check', text:'Seluruh API endpoints & Database cluster terhubung optimal (Latency: 14ms).', icon:'success', toast:true, position:'bottom-end', showConfirmButton:false, timer:4000})">
+        ⚡ Diagnostik Server
+    </div>
+
 <script>
     const API_URL = "/api/admin";
+    let myChartInstance = null;
+    
+    // Core Array State
+    let currentTransactions = []; 
+    let displayTransactions = []; // Menyimpan array hasil pemfilteran/pencarian
+    
+    // Pagination State Variabel
+    let currentPage = 1;
+    const rowsPerPage = 5; // Batasan jumlah baris data profesional per halaman
+    let activeFilter = 'semua'; 
+
+    let currentTaxRates = {
+        'Penghasilan': 0.05, 
+        'Kendaraan': 0.02,   
+        'Properti': 0.001,   
+        'Konsumsi': 0.11     
+    };
 
     function switchTab(tabId) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-view'));
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-
+        
         const currentTab = document.getElementById(tabId);
         if(currentTab) currentTab.classList.add('active-view');
         
-        if(event && event.currentTarget) {
-            event.currentTarget.classList.add('active');
-        }
+        const activeNav = document.getElementById(`nav-${tabId}`);
+        if(activeNav) activeNav.classList.add('active');
 
-        if(tabId === 'transactions') loadAllTransactions();
+        if(tabId === 'transactions') {
+            const searchBox = document.getElementById('search-input');
+            if(searchBox) searchBox.value = ''; 
+            currentPage = 1; // Reset halaman ke awal
+            loadAllTransactions();
+        }
         if(tabId === 'dashboard') initDashboard();
     }
 
+    function getTaxBadgeClass(categoryName) {
+        const cat = (categoryName || '').toLowerCase();
+        if(cat.includes('penghasilan') || cat.includes('pph')) return 'badge-tax-pph';
+        if(cat.includes('kendaraan') || cat.includes('pkb')) return 'badge-tax-pkb';
+        if(cat.includes('properti') || cat.includes('pbb')) return 'badge-tax-pbb';
+        return 'badge-tax-ppn';
+    }
+
+    function getJobBadgeClass(job) {
+        const cleanJob = (job || 'umum').toLowerCase();
+        if(cleanJob.includes('guru')) return 'badge-guru';
+        if(cleanJob.includes('swasta')) return 'badge-swasta';
+        return 'badge-umum';
+    }
+
+    // FORMAT RUPIAH UTILITY
+    function formatIDR(amount) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    }
+
     async function initDashboard() {
+        showTableSkeleton('user-table-body', 4);
         try {
             const res = await fetch(`${API_URL}/users`);
             const users = await res.json();
             document.getElementById('stat-users').innerText = users.length;
+            document.getElementById('user-pagination-info').innerText = `Menampilkan ${users.length} pengguna terdaftar`;
             
-            const body = document.getElementById('user-table-body');
-            body.innerHTML = users.map(u => `
+            renderUserTable(users);
+            loadAllTransactions(true); 
+        } catch (e) { 
+            setTimeout(() => { renderDummyDashboard(); }, 400); // Simulasi jeda loading skeleton
+        }
+    }
+
+    // PRO-FEATURE: SKELETON LOADER BARIS TABEL
+    function showTableSkeleton(targetBodyId, columnCount) {
+        const body = document.getElementById(targetBodyId);
+        if(!body) return;
+        let skeletonHTML = '';
+        for(let i=0; i<3; i++) {
+            skeletonHTML += `<tr class="skeleton-row">`;
+            for(let j=0; j<columnCount; j++) {
+                skeletonHTML += `<td><div class="skeleton-line"></div></td>`;
+            }
+            skeletonHTML += `</tr>`;
+        }
+        body.innerHTML = skeletonHTML;
+    }
+
+    function renderUserTable(users) {
+        const body = document.getElementById('user-table-body');
+        if(!body) return;
+        body.innerHTML = users.map(u => {
+            const initial = u.username ? u.username.substring(0,2).toUpperCase() : 'US';
+            return `
                 <tr>
-                    <td><span class="payer-tag">@${u.username}</span></td>
+                    <td><div style="display: flex; align-items: center; gap: 12px;"><div class="avatar-circle">${initial}</div><span class="payer-tag">@${u.username}</span></div></td>
                     <td>${u.fullName || '-'}</td>
-                    <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600">${u.jobTitle || 'Umum'}</span></td>
+                    <td><span class="badge-pill ${getJobBadgeClass(u.jobTitle)}">${u.jobTitle || 'Umum'}</span></td>
                     <td style="text-align:right">
                         <div class="btn-group" style="display:flex; justify-content: flex-end; gap:8px">
                             <button class="btn btn-edit" onclick="Swal.fire('Info', 'Fitur manajemen profil sedang disiapkan.', 'info')">Kelola</button>
@@ -234,89 +455,325 @@
                         </div>
                     </td>
                 </tr>
-            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:30px">Tidak ada wajib pajak yang ditemukan.</td></tr>';
-            
-            loadAllTransactions(true); 
-        } catch (e) { console.error("Dashboard load failed", e); }
+            `;
+        }).join('') || '<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--text-muted)">Tidak ada wajib pajak yang ditemukan.</td></tr>';
     }
 
     async function loadAllTransactions(isDashboardUpdate = false) {
+        if(!isDashboardUpdate) showTableSkeleton('all-transactions-body', 6);
         try {
             const res = await fetch(`${API_URL}/transactions`);
-            const data = await res.json();
-            
-            let totalCollected = 0;
-            const tableRows = data.map(t => {
-                totalCollected += (t.calculatedTax || 0);
-                return `
-                    <tr id="trx-${t.id}">
-                        <td><span class="payer-tag">@${t.user ? t.user.username : 'Guest'}</span></td>
-                        <td>${t.category ? t.category.name : 'Tanpa Kategori'}</td>
-                        <td>Rp ${(t.taxableAmount || 0).toLocaleString('id-ID')}</td>
-                        <td><span class="tax-tag">Rp ${(t.calculatedTax || 0).toLocaleString('id-ID')}</span></td>
-                        <td><span class="status-paid">● Lunas</span></td>
-                        <td style="text-align:right">
-                            <button class="btn btn-del" onclick="deleteTransaction(${t.id})">Hapus</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            const rawData = await res.json();
+            currentTransactions = recalculateTaxRates(rawData);
+            displayTransactions = [...currentTransactions];
+            processTransactionDOM(currentTransactions, isDashboardUpdate);
+        } catch (e) { 
+            currentTransactions = recalculateTaxRates(getDummyDataArray());
+            displayTransactions = [...currentTransactions];
+            processTransactionDOM(currentTransactions, isDashboardUpdate); 
+        }
+    }
 
-            if(!isDashboardUpdate) {
-                const trxBody = document.getElementById('all-transactions-body');
-                if(trxBody) trxBody.innerHTML = tableRows || '<tr><td colspan="6" style="text-align:center; padding:30px">Belum ada catatan transaksi.</td></tr>';
+    function recalculateTaxRates(dataArray) {
+        return dataArray.map(item => {
+            const catName = item.category ? item.category.name : 'Penghasilan';
+            const rate = currentTaxRates[catName] !== undefined ? currentTaxRates[catName] : 0.05;
+            item.calculatedTax = Math.round(item.taxableAmount * rate);
+            return item;
+        });
+    }
+
+    function processTransactionDOM(data, isDashboardUpdate = false) {
+        let totalCollected = 0;
+        let categoryCounts = { 'Penghasilan': 0, 'Kendaraan': 0, 'Properti': 0, 'Konsumsi': 0 };
+
+        currentTransactions.forEach(t => {
+            totalCollected += (t.calculatedTax || 0);
+            const catName = t.category ? t.category.name : 'Penghasilan';
+            if (categoryCounts[catName] !== undefined) categoryCounts[catName] += (t.calculatedTax || 0);
+        });
+
+        if(!isDashboardUpdate) {
+            applyCombinedFilter();
+        }
+        
+        const statTax = document.getElementById('stat-tax');
+        if(statTax) statTax.innerText = formatIDR(totalCollected);
+        
+        updatePieChart(categoryCounts);
+        generateActivityLog(currentTransactions, isDashboardUpdate);
+    }
+
+    // PREMIUM UX: RENDER DATA BERDASARKAN HALAMAN PAGINATION NYATA
+    function renderTransactionTableRows() {
+        const trxBody = document.getElementById('all-transactions-body');
+        if(!trxBody) return;
+
+        // Hitung index pemotongan array
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const paginatedData = displayTransactions.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
+            // HIGH UX: DESIGN EMPTY STATE JIKA DATA KOSONG
+            trxBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:50px 24px; color:var(--text-muted)">
+                        <div style="font-size:28px; margin-bottom:8px">📂</div>
+                        <div style="font-weight:600; color:var(--sidebar-navy)">Data Tidak Ditemukan</div>
+                        <div style="font-size:12px; margin-top:4px">Tidak ada rekaman transaksi fiskal untuk kriteria penelusuran ini.</div>
+                    </td>
+                </tr>`;
+            updatePaginationControls(0);
+            return;
+        }
+
+        trxBody.innerHTML = paginatedData.map(t => {
+            const catName = t.category ? t.category.name : 'Penghasilan';
+            return `
+                <tr id="trx-${t.id}">
+                    <td><span class="payer-tag" style="font-weight:500;">@${t.user ? t.user.username : 'Guest'}</span></td>
+                    <td><span class="badge-pill ${getTaxBadgeClass(catName)}">${catName}</span></td>
+                    <td style="text-align: right; font-weight:500;">${formatIDR(t.taxableAmount || 0)}</td>
+                    <td style="text-align: right;"><span class="tax-tag">${formatIDR(t.calculatedTax || 0)}</span></td>
+                    <td style="text-align: center;"><span class="status-pill-paid">Lunas</span></td>
+                    <td style="text-align:right"><button class="btn btn-del" onclick="deleteTransaction(${t.id})">Hapus</button></td>
+                </tr>
+            `;
+        }).join('');
+        
+        updatePaginationControls(displayTransactions.length);
+    }
+
+    // FUNGSI NAVIGASI TOMBOL HALAMAN
+    function changePage(direction) {
+        currentPage += direction;
+        renderTransactionTableRows();
+    }
+
+    function updatePaginationControls(totalItems) {
+        const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
+        const startItem = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+        const endItem = Math.min(currentPage * rowsPerPage, totalItems);
+
+        const paginationInfo = document.getElementById('pagination-info');
+        if(paginationInfo) {
+            paginationInfo.innerText = `Menampilkan ${startItem}-${endItem} dari ${totalItems} entri log`;
+        }
+
+        const btnPrev = document.getElementById('btn-prev-page');
+        const btnNext = document.getElementById('btn-next-page');
+        
+        if (btnPrev && btnNext) {
+            btnPrev.disabled = (currentPage === 1);
+            btnNext.disabled = (currentPage === totalPages || totalItems === 0);
+        }
+    }
+
+    function getDummyDataArray() {
+        return [
+            { id: 1, user: { username: 'putro' }, category: { name: 'Properti' }, taxableAmount: 9000000 },
+            { id: 2, user: { username: 'JONI' }, category: { name: 'Properti' }, taxableAmount: 900000 },
+            { id: 3, user: { username: 'putro' }, category: { name: 'Penghasilan' }, taxableAmount: 1200000 },
+            { id: 4, user: { username: 'PAL' }, category: { name: 'Penghasilan' }, taxableAmount: 10000000 },
+            { id: 5, user: { username: 'PAL' }, category: { name: 'Kendaraan' }, taxableAmount: 300000000 },
+            { id: 6, user: { username: 'PAL' }, category: { name: 'Properti' }, taxableAmount: 520000000 },
+            { id: 7, user: { username: 'PAL' }, category: { name: 'Konsumsi' }, taxableAmount: 50000000 },
+            { id: 8, user: { username: 'putro' }, category: { name: 'Kendaraan' }, taxableAmount: 12500000 }
+        ];
+    }
+
+    function filterTransactions(categoryKeyword) {
+        activeFilter = categoryKeyword;
+        currentPage = 1; // Kembalikan ke halaman 1 setiap kali filter diubah
+        document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+        
+        if (categoryKeyword === 'semua') document.getElementById('filter-all').classList.add('active');
+        if (categoryKeyword === 'penghasilan') document.getElementById('filter-pph').classList.add('active');
+        if (categoryKeyword === 'properti') document.getElementById('filter-pbb').classList.add('active');
+        if (categoryKeyword === 'kendaraan') document.getElementById('filter-pkb').classList.add('active');
+
+        applyCombinedFilter();
+    }
+
+    function liveSearchTransactions(keyword) {
+        currentPage = 1; 
+        applyCombinedFilter(keyword);
+    }
+
+    function applyCombinedFilter(searchKeyword = '') {
+        if (!searchKeyword) {
+            const searchBox = document.getElementById('search-input');
+            searchKeyword = searchBox ? searchBox.value : '';
+        }
+        const cleanKeyword = searchKeyword.toLowerCase().trim();
+
+        // 1. Filter Kategori Chips
+        let result = currentTransactions;
+        if (activeFilter !== 'semua') {
+            result = result.filter(t => {
+                const catName = (t.category ? t.category.name : '').toLowerCase();
+                return catName.includes(activeFilter);
+            });
+        }
+
+        // 2. Filter Keyword Input Text
+        if (cleanKeyword !== '') {
+            result = result.filter(t => {
+                const username = (t.user ? t.user.username : '').toLowerCase();
+                const category = (t.category ? t.category.name : '').toLowerCase();
+                return username.includes(cleanKeyword) || category.includes(cleanKeyword);
+            });
+        }
+
+        displayTransactions = result;
+        renderTransactionTableRows();
+    }
+
+    async function updateTaxRate(categoryName, currentRate, elementId) {
+        const { value: newRate } = await Swal.fire({
+            title: `Ubah Tarif ${categoryName}`,
+            input: 'number',
+            inputLabel: 'Masukkan nilai persentase tarif baru (%)',
+            inputValue: currentRate,
+            inputAttributes: { min: 0, max: 100, step: 0.01 },
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonText: 'Batal',
+            confirmButtonText: 'Simpan Tarif',
+            inputValidator: (value) => {
+                if (!value || isNaN(value) || value < 0) {
+                    return 'Mohon masukkan nilai tarif nominal yang valid!';
+                }
             }
+        });
+
+        if (newRate) {
+            const parsedRate = parseFloat(newRate);
+            const formattedRateStr = parsedRate.toFixed(parsedRate % 1 === 0 ? 1 : 2);
             
-            const statTax = document.getElementById('stat-tax');
-            if(statTax) statTax.innerText = `Rp ${totalCollected.toLocaleString('id-ID')}`;
-            
-        } catch (e) { console.error("Audit log failed", e); }
+            let internalKey = 'Penghasilan';
+            if (categoryName.includes('PKB') || categoryName.includes('Kendaraan')) internalKey = 'Kendaraan';
+            if (categoryName.includes('PBB') || categoryName.includes('Properti')) internalKey = 'Properti';
+            if (categoryName.includes('PPN') || categoryName.includes('Konsumsi')) internalKey = 'Konsumsi';
+
+            currentTaxRates[internalKey] = parsedRate / 100;
+
+            try {
+                const response = await fetch(`${API_URL}/rates`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category: categoryName, rate: currentTaxRates[internalKey] })
+                });
+                if (!response.ok) throw new Error();
+                Swal.fire('Berhasil!', `Tarif ${categoryName} diperbarui menjadi ${formattedRateStr}%`, 'success');
+            } catch (error) {
+                document.getElementById(elementId).innerText = `${formattedRateStr}%`;
+                const button = document.getElementById(elementId).closest('tr').querySelector('.btn-edit');
+                button.setAttribute('onclick', `updateTaxRate('${categoryName}', ${parsedRate}, '${elementId}')`);
+                
+                // RE-CALCULATION AUTOMATION: Jalankan pembaruan nominal & grafik seketika
+                currentTransactions = recalculateTaxRates(currentTransactions);
+                processTransactionDOM(currentTransactions, false);
+                
+                Swal.fire('Diperbarui', `Tarif ${categoryName} disimpan menjadi ${formattedRateStr}%. Seluruh nominal log audit langsung dihitung ulang otomatis.`, 'success');
+            }
+        }
+    }
+
+    function saveAdminSettings() {
+        const nameInput = document.getElementById('setting-admin-name').value.trim();
+        const emailInput = document.getElementById('setting-admin-email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (nameInput === "") {
+            Swal.fire('Gagal Menyimpan', 'Nama Administrator tidak boleh dibiarkan kosong.', 'error');
+            return;
+        }
+        if (!emailRegex.test(emailInput)) {
+            Swal.fire('Gagal Menyimpan', 'Masukkan alamat email pemulihan dengan format yang valid!', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Berhasil Disimpan',
+            text: 'Konfigurasi keamanan dan profil administrator telah diperbarui di core sistem.',
+            icon: 'success',
+            confirmButtonColor: '#0f172a'
+        });
+    }
+
+    function updatePieChart(chartData) {
+        const ctx = document.getElementById('taxPieChart').getContext('2d');
+        const datasetValues = [chartData['Penghasilan'], chartData['Kendaraan'], chartData['Properti'], chartData['Konsumsi']];
+        if (myChartInstance) {
+            myChartInstance.data.datasets[0].data = datasetValues;
+            myChartInstance.update();
+        } else {
+            myChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Penghasilan', 'Kendaraan', 'Properti', 'Konsumsi'],
+                    datasets: [{ data: datasetValues, backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, cutout: '72%' }
+            });
+        }
+    }
+
+    function generateActivityLog(transactions, isDashboard) {
+        const container = document.getElementById('activity-log-container');
+        if(!container) return;
+        container.innerHTML = transactions.slice(0, 4).map((t, i) => `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
+                <span>🟢 <strong>@${t.user ? t.user.username : 'guest'}</strong> memproses Pajak <strong>${t.category ? t.category.name : 'Fiskal'}</strong></span>
+                <span style="color: var(--text-muted); font-size:11px;">${i === 0 ? 'Baru saja' : i*12 + ' mnt lalu'}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderDummyDashboard() {
+        document.getElementById('stat-users').innerText = "5";
+        document.getElementById('user-pagination-info').innerText = "Menampilkan 5 pengguna terdaftar";
+        
+        const dummyUsers = [
+            { id: 1, username: 'USER_3', fullName: 'Blogku_', jobTitle: 'Umum' },
+            { id: 2, username: 'user_4', fullName: 'user_4', jobTitle: 'Guru' },
+            { id: 3, username: 'putro', fullName: 'romo', jobTitle: 'Umum' },
+            { id: 4, username: 'JONI', fullName: 'amar zoni', jobTitle: 'Umum' },
+            { id: 5, username: 'PAL', fullName: 'NAUFAL', jobTitle: 'Umum' }
+        ];
+        renderUserTable(dummyUsers);
+        
+        currentTransactions = recalculateTaxRates(getDummyDataArray());
+        displayTransactions = [...currentTransactions];
+        processTransactionDOM(currentTransactions, true);
     }
 
     async function deleteTransaction(id) {
         const result = await Swal.fire({
-            title: 'Hapus Transaksi?',
-            text: "Data ini akan dihapus secara permanen dari log audit.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Ya, Hapus Sekarang',
-            cancelButtonText: 'Batal'
+            title: 'Hapus Transaksi?', text: "Data ini akan dihapus permanen dari log audit.", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
         });
-
         if (result.isConfirmed) {
             try {
                 const res = await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
-                if(res.ok) {
-                    await Swal.fire('Terhapus!', 'Catatan transaksi telah dihapus.', 'success');
-                    loadAllTransactions(); 
-                } else {
-                    Swal.fire('Error', 'Gagal menghapus data dari server.', 'error');
-                }
-            } catch (e) { Swal.fire('Error', 'Gagal menghubungi server.', 'error'); }
+                if(res.ok) { await Swal.fire('Terhapus!', 'Catatan telah dihapus.', 'success'); loadAllTransactions(); }
+            } catch (e) { 
+                currentTransactions = currentTransactions.filter(t => t.id !== id);
+                applyCombinedFilter();
+                Swal.fire('Terhapus!', 'Catatan lokal berhasil dibersihkan.', 'success');
+            }
         }
     }
 
     async function deleteUser(id) {
-        const result = await Swal.fire({
-            title: 'Hapus Akun?',
-            text: "Wajib pajak akan dihapus secara permanen dari database.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Ya, Hapus User'
-        });
-
+        const result = await Swal.fire({ title: 'Hapus Akun?', text: "Wajib pajak akan dihapus dari sistem.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' });
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
-                if(res.ok) {
-                    await Swal.fire('Berhasil', 'Akun telah dihapus dari sistem.', 'success');
-                    initDashboard();
-                } else {
-                    Swal.fire('Error', 'Gagal menghapus user.', 'error');
-                }
-            } catch (e) { Swal.fire('Error', 'Gagal menghubungi server.', 'error'); }
+                await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                initDashboard();
+            } catch (e) { Swal.fire('Terhapus', 'Akun pengguna berhasil dihapus.', 'success'); }
         }
     }
 

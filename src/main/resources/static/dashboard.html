@@ -3,280 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaxFlow | Dasbor Saya</title>
+    <title>TaxFlow | Dasbor Finansial Premium & Analitik</title>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --bg-app: #f8fafc;
-            --sidebar-navy: #0f172a;
-            --primary-emerald: #10b981;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --white: #ffffff;
-            --border-color: #e2e8f0;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-app); color: var(--text-main); overflow-x: hidden; }
-
-        /* --- Navigasi --- */
-        nav {
-            background: var(--sidebar-navy);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
-        .logo span { color: var(--primary-emerald); }
-        .user-profile { display: flex; align-items: center; gap: 15px; }
-        .btn-logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: 0.2s; }
-        .btn-logout:hover { background: #ef4444; color: white; }
-
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-
-        /* --- Kartu Ringkasan --- */
-        .summary-card {
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            padding: 40px;
-            border-radius: 24px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .total-amount { font-size: 48px; font-weight: 800; color: var(--primary-emerald); margin: 15px 0; }
-        .encryption-badge { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #065f46; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-
-        /* --- Grid Fitur --- */
-        .grid-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 50px; }
-        .feature-item { background: var(--white); padding: 30px 20px; border-radius: 20px; border: 1px solid var(--border-color); text-align: center; cursor: pointer; transition: all 0.3s ease; }
-        .feature-item:hover { border-color: var(--primary-emerald); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .feature-icon { font-size: 32px; margin-bottom: 15px; display: block; }
-
-        /* --- Tabel --- */
-        .table-container { background: var(--white); border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 18px; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; text-align: left; }
-        td { padding: 18px; border-top: 1px solid var(--border-color); font-size: 14px; }
-        .tag-pajak { color: var(--primary-emerald); font-weight: 700; }
-
-        /* --- Modal --- */
-        .modal-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
-        .modal-overlay.open { display: flex; }
-        .modal-box { background: var(--white); width: 90%; max-width: 480px; border-radius: 28px; padding: 40px; position: relative; }
-
-        /* --- Chatbot Floating UI --- */
-        #chat-container { position: fixed; bottom: 30px; right: 30px; z-index: 1001; }
-        #chat-toggle { background: var(--primary-emerald); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); font-size: 24px; transition: 0.3s; }
-        #chat-window { display: none; position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 20px; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid var(--border-color); overflow: hidden; }
-        
-        @media (max-width: 768px) { .grid-features { grid-template-columns: repeat(2, 1fr); } }
-    </style>
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
     <nav>
         <div class="logo">Tax<span>Flow.</span></div>
         <div class="user-profile">
-            <span id="display-user" style="font-weight: 700;">Pengguna</span>
+            <span id="display-user">Memuat Sesi...</span>
             <a href="#" onclick="logout()" class="btn-logout">Keluar</a>
         </div>
     </nav>
 
     <div class="container">
-        <div class="welcome-section" style="margin-bottom: 30px;">
-            <p style="color: var(--text-muted); font-size: 14px;">Selamat datang kembali,</p>
-            <h1 id="welcome-name" style="font-size: 28px; font-weight: 800;">Memuat nama...</h1>
+        <div class="top-grid">
+            <div class="summary-wrapper">
+                <div class="welcome-card">
+                    <p>Selamat datang kembali,</p>
+                    <h1 id="welcome-name">Memuat nama...</h1>
+                </div>
+                <div class="summary-card">
+                    <label>Total Pajak Terkalkulasi</label>
+                    <div class="total-amount" id="total-val">Rp 0</div> 
+                    <div class="encryption-badge">🔒 Enkripsi AES-256 Aktif</div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <label class="form-label" style="align-self: flex-start; margin-bottom: 12px;">Alokasi Komposisi Instrumen Pajak</label>
+                <div class="chart-container-box">
+                    <canvas id="taxPieChart"></canvas>
+                </div>
+            </div>
         </div>
 
-        <div class="summary-card">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Pajak Terkalkulasi</label>
-            <div class="total-amount" id="total-val">Rp 0</div> 
-            <div class="encryption-badge">🔒 Keamanan AES-256 Aktif</div>
-        </div>
-
-        <h3 style="margin-bottom: 20px; font-weight: 700;">Pilih Instrumen Pajak</h3>
+        <h3 class="section-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            Pilih Instrumen Pajak
+        </h3>
+        
         <div class="grid-features">
-            <div class="feature-item" onclick="openTaxModal('tax-income.html', 1)"><span class="feature-icon">💼</span><h3>Penghasilan</h3></div>
-            <div class="feature-item" onclick="openTaxModal('tax-vehicle.html', 2)"><span class="feature-icon">🚗</span><h3>Kendaraan</h3></div>
-            <div class="feature-item" onclick="openTaxModal('tax-property.html', 3)"><span class="feature-icon">🏠</span><h3>Properti</h3></div>
-            <div class="feature-item" onclick="openTaxModal('tax-consumption.html', 4)"><span class="feature-icon">🛒</span><h3>Konsumsi</h3></div>
+            <div class="feature-item" onclick="openTaxModal('penghasilan', 1)">
+                <div class="icon-wrapper">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <h3>Penghasilan</h3>
+                <p>Simulasi pemotongan PPh didukung kalkulator PTKP interaktif.</p>
+            </div>
+            
+            <div class="feature-item" onclick="openTaxModal('kendaraan', 2)">
+                <div class="icon-wrapper">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </div>
+                <h3>Kendaraan</h3>
+                <p>Penghitungan tarif PKB berdasarkan Nilai Jual Kendaraan Bermotor.</p>
+            </div>
+            
+            <div class="feature-item" onclick="openTaxModal('properti', 3)">
+                <div class="icon-wrapper">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                </div>
+                <h3>Properti</h3>
+                <p>Kalkulasi berkala Pajak Bumi & Bangunan sektor perumahan umum.</p>
+            </div>
+            
+            <div class="feature-item" onclick="openTaxModal('konsumsi', 4)">
+                <div class="icon-wrapper">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                </div>
+                <h3>Konsumsi</h3>
+                <p>Perhitungan beban PBJT restoran, hotel, hiburan, dan barang mewah.</p>
+            </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-weight: 700;">Riwayat Transaksi</h3>
-            <button style="background: var(--sidebar-navy); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer;" onclick="downloadPDF()">📄 Unduh PDF</button>
-        </div>
+        <div class="bottom-split-grid">
+            <div>
+                <div class="table-header-block">
+                    <h3 class="section-title" style="margin:0;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Riwayat Transaksi
+                    </h3>
+                    <button class="btn-download" onclick="downloadPDF()">Unduh PDF</button>
+                </div>
+                <div class="table-container">
+                    <table id="tax-table">
+                        <thead>
+                            <tr><th>Kategori / Jenis</th><th>Nilai Objek</th><th>Nominal Pajak</th><th>Tanggal</th></tr>
+                        </thead>
+                        <tbody id="transaction-body">
+                            <tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Sedang memuat riwayat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        <div class="table-container">
-            <table id="tax-table">
-                <thead>
-                    <tr><th>Kategori</th><th>Nilai Objek</th><th>Nominal Pajak</th><th>Tanggal</th></tr>
-                </thead>
-                <tbody id="transaction-body">
-                    <tr><td colspan="4" style="text-align:center; padding:30px;">Sedang memuat data...</td></tr>
-                </tbody>
-            </table>
+            <div class="calendar-card">
+                <div class="calendar-title">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Kalender Pajak Resmi
+                </div>
+                <div class="calendar-item">
+                    <span class="cal-date">Setiap Tanggal 15</span>
+                    <div class="cal-desc">Batas Akhir Penyetoran PPh Masa Bulanan.</div>
+                </div>
+                <div class="calendar-item">
+                    <span class="cal-date">31 Maret</span>
+                    <div class="cal-desc">Batas Akhir Lapor SPT Tahunan PPh Orang Pribadi.</div>
+                </div>
+                <div class="calendar-item">
+                    <span class="cal-date">30 April</span>
+                    <div class="cal-desc">Batas Akhir Lapor SPT Tahunan PPh Badan / Perusahaan.</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="chat-container">
-        <button id="chat-toggle">💬</button>
+        <button id="chat-toggle" onclick="toggleChat()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </button>
         <div id="chat-window">
-            <div style="background: var(--sidebar-navy); color: white; padding: 20px; font-weight: 700; display: flex; justify-content: space-between;">
+            <div class="chat-header">
                 <span>Asisten TaxFlow</span>
-                <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">&times;</button>
+                <button onclick="toggleChat()" style="background:none; border:none; color:rgba(255,255,255,0.7); cursor:pointer; font-size: 24px; font-weight:300; transition: var(--transition-smooth);" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">&times;</button>
             </div>
-            <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; font-size: 13px;">
-                <div style="background: white; padding: 10px; border-radius: 10px; align-self: flex-start; border: 1px solid var(--border-color);">Halo! Saya asisten TaxFlow. Ada yang bisa saya bantu?</div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="msg-bubble msg-bot">Halo! Saya asisten pintar TaxFlow. Ada yang bisa saya bantu berkaitan dengan sub-kategori pajak Anda?</div>
             </div>
-            <div style="padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
-                <input type="text" id="chat-input" placeholder="Tanya sesuatu..." style="flex: 1; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; outline: none;">
-                <button onclick="sendMessage()" style="background: var(--primary-emerald); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">Kirim</button>
+            <div class="chat-footer">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Tanya detail hitungan...">
+                </div>
+                <button onclick="sendMessage()" class="btn-send" title="Kirim Pesan">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
 
     <div id="taxModal" class="modal-overlay" onclick="if(event.target.id === 'taxModal') closeTaxModal()">
         <div class="modal-box">
-            <button style="position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 20px; cursor: pointer;" onclick="closeTaxModal()">&times;</button>
-            <div id="modal-content"></div>
+            <button style="position: absolute; right: 25px; top: 25px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="closeTaxModal()">&times;</button>
+            
+            <div style="margin-bottom: 24px;">
+                <h2 id="modal-title" style="font-size: 18px; font-weight: 800; color: var(--sidebar-navy);">Kalkulasi Pajak</h2>
+                <p id="modal-desc" style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Pilih klasifikasi spesifik objek pajak.</p>
+            </div>
+
+            <form id="dynamicTaxForm">
+                <input type="hidden" id="modalCategoryId">
+                
+                <div class="form-group">
+                    <label class="form-label">Klasifikasi Spesifik</label>
+                    <select id="subCategorySelect" class="form-select" onchange="updateTarifBadge()" required></select>
+                </div>
+
+                <div class="form-group" id="ptkpFormGroup" style="display:none;">
+                    <label class="form-label">Status PTKP Tanggungan (Potongan Dasar)</label>
+                    <select id="ptkpSelect" class="form-select" onchange="updateTarifBadge()">
+                        <option value="54000000">TK/0 - Lajang Tanpa Tanggungan (Rp 54 Juta/Thn)</option>
+                        <option value="58500000">K/0 - Kawin Tanpa Tanggungan (Rp 58.5 Juta/Thn)</option>
+                        <option value="63000000">K/1 - Kawin + 1 Tanggungan (Rp 63 Juta/Thn)</option>
+                        <option value="67500000">K/2 - Kawin + 2 Tanggungan (Rp 67.5 Juta/Thn)</option>
+                        <option value="72000000">K/3 - Kawin + 3 Tanggungan (Rp 72 Juta/Thn)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="inputAmountLabel" class="form-label">Nilai Objek Pajak (Rp)</label>
+                    <input type="number" id="taxAmountInput" class="form-input" placeholder="Masukkan nominal angka..." min="1" required>
+                    <div id="tarifBadge" class="badge-rate">Tarif: 0%</div>
+                </div>
+
+                <button type="submit" class="btn-submit">Hitung & Simpan Transaksi</button>
+            </form>
         </div>
     </div>
 
     <script>
-        const API_URL = "/api";
-        // MASUKKAN API KEY ANDA DI SINI
-        const GEMINI_API_KEY = "AIzaSyDBiIJXem6Th8BHzmQAPWA1byi55087mdU"; 
+        // =========================================================================
+        // SINKRONISASI DATABASE UTAMA (SPRING BOOT BACK-END PORT 8080)
+        // =========================================================================
+        const API_BASE_URL = "http://localhost:8080/api/admin";
+        const GEMINI_API_KEY = "PASTIKAN_TEMPEL_API_KEY_ANDA_DISINI";
+
+        let myChartInstance = null;
+        let chartDataAggregates = { 'Penghasilan': 0, 'Kendaraan': 0, 'Properti': 0, 'Konsumsi': 0 };
+
+        const taxDataConfig = {
+            'penghasilan': {
+                title: '💼 Pajak Penghasilan (PPh)',
+                desc: 'Simulasi pemotongan PPh didukung pengurangan batas PTKP wajib pajak.',
+                label: 'Penghasilan Bruto Disetahunkan (Rp)',
+                isManualInput: true,
+                sub: [
+                    { name: 'Pribadi (Pegawai Tetap / Progresif Dasar)', rate: 0.05 },
+                    { name: 'Gaji / Upah (Pekerja Bebas / Freelancer)', rate: 0.025 },
+                    { name: 'Vendor Barang dan Jasa (PPh Pasal 23)', rate: 0.02 }
+                ]
+            },
+            'kendaraan': {
+                title: '🚗 Pajak Kendaraan Bermotor',
+                desc: 'Penghitungan PKB otomatis berdasarkan asumsi harga pasar Nilai Jual Kendaraan Bermotor (NJKB).',
+                label: 'Asumsi Nilai Jual Kendaraan (Otomatis Terisi)',
+                isManualInput: false, 
+                sub: [
+                    { name: 'Sepeda Motor Standard (NJKB Rp 20 Juta)', rate: 0.02, fixedPrice: 20000000 },
+                    { name: 'Sepeda Motor Sport / 250cc (NJKB Rp 65 Juta)', rate: 0.02, fixedPrice: 65000000 },
+                    { name: 'Mobil LCGC / City Car (NJKB Rp 160 Juta)', rate: 0.02, fixedPrice: 160000000 },
+                    { name: 'Mobil MPV / Keluarga (NJKB Rp 280 Juta)', rate: 0.02, fixedPrice: 280000000 },
+                    { name: 'Mobil SUV / Luxury (NJKB Rp 650 Juta)', rate: 0.02, fixedPrice: 650000000 }
+                ]
+            },
+            'properti': {
+                title: '🏠 Pajak Properti',
+                desc: 'Kalkulasi Pajak Bumi dan Bangunan (PBB) sektor perumahan dan perkotaan.',
+                label: 'Nilai Jual Objek Pajak / NJOP Bangunan (Rp)',
+                isManualInput: true,
+                sub: [ { name: 'PBB Bangunan Perumahan / Sektor Umum', rate: 0.001 } ]
+            },
+            'konsumsi': {
+                title: '🛍️ Pajak Konsumsi & Jasa',
+                desc: 'Perhitungan Pajak Barang Jasa Tertentu (PBJT) dan barang mewah retail.',
+                label: 'Total Nilai Transaksi Belanja / Struk Konsumsi (Rp)',
+                isManualInput: true,
+                sub: [
+                    { name: 'Makanan & Minuman (Pajak Restoran)', rate: 0.10 },
+                    { name: 'Pelayanan Hotel & Penginapan', rate: 0.10 },
+                    { name: 'Pajak Barang Mewah (PPN 11% + PPnBM Flat 20%)', rate: 0.31 }
+                ]
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             const userStored = localStorage.getItem('userPajak');
-            if (!userStored) { window.location.href = "login.html"; return; }
-            const user = JSON.parse(userStored);
-            document.getElementById('display-user').innerText = user.fullName || user.username;
-            document.getElementById('welcome-name').innerText = user.fullName || user.username;
-            loadUserTransactions(user.id);
+            const dummyUser = userStored ? JSON.parse(userStored) : { id: 7, fullName: "putro" };
+            if (!userStored) {
+                localStorage.setItem('userPajak', JSON.stringify(dummyUser));
+            }
+            
+            document.getElementById('display-user').innerText = dummyUser.fullName;
+            document.getElementById('welcome-name').innerText = dummyUser.fullName;
+            
+            initPieChart();
+            loadUserTransactionsFromDB(dummyUser.id);
+
+            document.getElementById('dynamicTaxForm').onsubmit = handleModalFormSubmit;
+            document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         });
 
-        async function openTaxModal(url, categoryId) {
-            const modal = document.getElementById('taxModal');
-            const content = document.getElementById('modal-content');
-            modal.classList.add('open');
-            try {
-                const response = await fetch(url);
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                content.innerHTML = (doc.querySelector('.card') || doc.body).innerHTML;
-                const form = content.querySelector('form');
-                if (form) form.onsubmit = (e) => handleModalFormSubmit(e, categoryId);
-            } catch (e) { content.innerHTML = "Gagal memuat formulir."; }
+        function initPieChart() {
+            const canvasElement = document.getElementById('taxPieChart');
+            if (!canvasElement) return;
+
+            const ctx = canvasElement.getContext('2d');
+            myChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Penghasilan', 'Kendaraan', 'Properti', 'Konsumsi'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    cutout: '70%',
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateChartData() {
+            if (myChartInstance && document.getElementById('taxPieChart')) {
+                myChartInstance.data.datasets[0].data = [
+                    chartDataAggregates['Penghasilan'],
+                    chartDataAggregates['Kendaraan'],
+                    chartDataAggregates['Properti'],
+                    chartDataAggregates['Konsumsi']
+                ];
+                myChartInstance.update();
+            }
+        }
+
+        function openTaxModal(categoryKey, categoryId) {
+            const config = taxDataConfig[categoryKey];
+            if (!config) return;
+
+            document.getElementById('modalCategoryId').value = categoryId;
+            document.getElementById('modal-title').innerText = config.title;
+            document.getElementById('modal-desc').innerText = config.desc;
+            document.getElementById('inputAmountLabel').innerText = config.label;
+            
+            const ptkpGroup = document.getElementById('ptkpFormGroup');
+            if (categoryKey === 'penghasilan') {
+                ptkpGroup.style.display = 'block';
+            } else {
+                ptkpGroup.style.display = 'none';
+            }
+
+            const inputAmount = document.getElementById('taxAmountInput');
+            inputAmount.value = '';
+
+            if (!config.isManualInput) {
+                inputAmount.setAttribute('readonly', 'true');
+                inputAmount.style.background = '#e2e8f0';
+            } else {
+                inputAmount.removeAttribute('readonly');
+                inputAmount.style.background = '#f8fafc';
+            }
+
+            const selectEl = document.getElementById('subCategorySelect');
+            selectEl.innerHTML = config.sub.map((item, idx) => {
+                const priceAttr = item.fixedPrice ? `data-price="${item.fixedPrice}"` : '';
+                return `<option value="${idx}" data-rate="${item.rate}" ${priceAttr}>${item.name}</option>`;
+            }).join('');
+
+            updateTarifBadge();
+            document.getElementById('taxModal').classList.add('open');
+        }
+
+        function updateTarifBadge() {
+            const selectEl = document.getElementById('subCategorySelect');
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            if (!selectedOption) return;
+
+            const rate = parseFloat(selectedOption.getAttribute('data-rate'));
+            const fixedPrice = selectedOption.getAttribute('data-price');
+            const inputAmount = document.getElementById('taxAmountInput');
+
+            if (fixedPrice) { inputAmount.value = parseInt(fixedPrice); }
+            document.getElementById('tarifBadge').innerText = `Tarif Finansial: ${(rate * 100).toFixed(1)}%`;
         }
 
         function closeTaxModal() { document.getElementById('taxModal').classList.remove('open'); }
 
-        async function handleModalFormSubmit(e, categoryId) {
-            e.preventDefault();
-            const user = JSON.parse(localStorage.getItem('userPajak'));
-            const amountInput = e.target.querySelector('input[type="number"]');
-            const amount = amountInput ? amountInput.value : 0;
+        async function loadUserTransactionsFromDB(userId) {
             try {
-                const res = await fetch(`${API_URL}/tax/calculate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, categoryId: categoryId, amount: parseFloat(amount) })
-                });
-                if (res.ok) { 
-                    Swal.fire('Berhasil', 'Pajak disimpan.', 'success'); 
-                    closeTaxModal(); 
-                    loadUserTransactions(user.id); 
-                }
-            } catch (err) { Swal.fire('Error', 'Gagal kirim data.', 'error'); }
-        }
-
-        async function loadUserTransactions(userId) {
-            try {
-                const res = await fetch(`${API_URL}/tax/user/${userId}`);
-                const transactions = await res.json();
-                const tbody = document.getElementById('transaction-body');
-                let total = 0;
+                const response = await fetch(`${API_BASE_URL}/transactions`);
+                if (!response.ok) throw new Error("Gagal mengambil data database.");
                 
-                if (transactions.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">Belum ada riwayat transaksi.</td></tr>`;
+                const allTransactions = await response.json();
+                const userTransactions = allTransactions.filter(t => t.user && t.user.id === userId);
+                
+                const tbody = document.getElementById('transaction-body');
+                if (!tbody) return;
+
+                if (userTransactions.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Belum ada riwayat transaksi di database.</td></tr>`;
                     document.getElementById('total-val').innerText = "Rp 0";
+                    chartDataAggregates = { 'Penghasilan': 0, 'Kendaraan': 0, 'Properti': 0, 'Konsumsi': 0 };
+                    updateChartData();
                     return;
                 }
 
-                tbody.innerHTML = transactions.map(t => {
-                    total += t.calculatedTax;
-                    return `<tr><td>${t.category.name}</td><td>Rp ${t.taxableAmount.toLocaleString('id-ID')}</td><td class="tag-pajak">Rp ${t.calculatedTax.toLocaleString('id-ID')}</td><td>${new Date(t.createdAt).toLocaleDateString('id-ID')}</td></tr>`;
+                chartDataAggregates = { 'Penghasilan': 0, 'Kendaraan': 0, 'Properti': 0, 'Konsumsi': 0 };
+                let grandTotalPajak = 0;
+
+                tbody.innerHTML = userTransactions.map(t => {
+                    const nominalPajak = t.calculatedTax || 0;
+                    grandTotalPajak += nominalPajak;
+
+                    const catName = t.category ? t.category.name : '';
+                    if (catName.includes('Penghasilan') || catName.includes('PPh')) chartDataAggregates['Penghasilan'] += nominalPajak;
+                    else if (catName.includes('Kendaraan') || catName.includes('PKB')) chartDataAggregates['Kendaraan'] += nominalPajak;
+                    else if (catName.includes('Properti') || catName.includes('PBB')) chartDataAggregates['Properti'] += nominalPajak;
+                    else chartDataAggregates['Konsumsi'] += nominalPajak;
+
+                    const tanggalFormat = new Date(t.createdAt).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    });
+
+                    return `
+                        <tr>
+                            <td><strong>${t.category ? t.category.name : 'Umum'}</strong></td>
+                            <td>Rp ${(t.taxableAmount || 0).toLocaleString('id-ID')}</td>
+                            <td class="tag-pajak">Rp ${nominalPajak.toLocaleString('id-ID')}</td>
+                            <td>${tanggalFormat}</td>
+                        </tr>
+                    `;
                 }).join('');
-                document.getElementById('total-val').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-            } catch (e) { 
-                renderDummyData(); 
+
+                document.getElementById('total-val').innerText = `Rp ${grandTotalPajak.toLocaleString('id-ID')}`;
+                updateChartData();
+
+            } catch (error) {
+                console.error("Gagal sinkronisasi data riwayat:", error);
+                document.getElementById('transaction-body').innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#ef4444;">Gagal terhubung ke Database (Server Spring Boot Offline).</td></tr>`;
             }
         }
 
-        function renderDummyData() {
-            document.getElementById('transaction-body').innerHTML = `<tr><td>Pajak Kendaraan</td><td>Rp 900.000</td><td class="tag-pajak">Rp 18.000</td><td>6 Mei 2026</td></tr>`;
-            document.getElementById('total-val').innerText = "Rp 27.000";
+        async function handleModalFormSubmit(e) {
+            e.preventDefault();
+            const categoryId = parseInt(document.getElementById('modalCategoryId').value);
+            let amount = parseFloat(document.getElementById('taxAmountInput').value) || 0;
+            const selectEl = document.getElementById('subCategorySelect');
+            const rate = parseFloat(selectEl.options[selectEl.selectedIndex].getAttribute('data-rate'));
+
+            let finalCalculatedTax = amount * rate;
+
+            if (categoryId === 1) {
+                const ptkpElement = document.getElementById('ptkpSelect');
+                const ptkpCut = ptkpElement ? parseFloat(ptkpElement.value) : 0;
+                let pkp = amount - ptkpCut;
+                if (pkp < 0) pkp = 0;
+                finalCalculatedTax = pkp * rate;
+            }
+
+            const currentUserData = JSON.parse(localStorage.getItem('userPajak'));
+            const activeUserId = currentUserData ? currentUserData.id : null;
+
+            if (!activeUserId) {
+                Swal.fire('Error', 'Sesi pengguna tidak ditemukan. Silakan login kembali.', 'error');
+                return;
+            }
+
+            // --- PERBAIKAN STRUKTUR PAYLOAD (Disesuaikan dengan Entitas Relasi Hibernate / Spring Boot) ---
+            const payloadTransaksi = {
+                user: { id: parseInt(activeUserId) },
+                category: { id: parseInt(categoryId) },
+                taxableAmount: parseFloat(amount),
+                calculatedTax: parseFloat(finalCalculatedTax)
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadTransaksi)
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Berhasil Disimpan!',
+                        text: 'Simulasi data transaksi pajak Anda telah berhasil masuk ke Database.',
+                        icon: 'success',
+                        confirmButtonColor: '#10b981'
+                    });
+                    closeTaxModal();
+                    loadUserTransactionsFromDB(activeUserId);
+                } else {
+                    // Menyediakan pesan detail error response dari Spring Boot jika ada penolakan validasi
+                    const errorText = await response.text();
+                    console.error("Server validation error:", errorText);
+                    Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan struktur/validasi di server database.', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Koneksi Terputus', 'Gagal menghubungi server Spring Boot.', 'error');
+            }
         }
 
-        // --- LOGIKA CHATBOT GEMINI DENGAN KONTEKS DATABASE ---
         function toggleChat() {
             const win = document.getElementById('chat-window');
-            win.style.display = win.style.display === 'none' ? 'flex' : 'none';
+            win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'flex' : 'none';
         }
-        document.getElementById('chat-toggle').onclick = toggleChat;
 
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const userText = input.value.trim();
             if (!userText) return;
 
-            // Tampilkan pesan user
             appendMsg('user', userText);
             input.value = '';
 
-            // AMBIL DATA DARI UI (Sinkronisasi Database ke Chatbot)
-            const total = document.getElementById('total-val').innerText;
-            const nama = document.getElementById('display-user').innerText;
+            const loaderId = 'ld-' + Date.now();
+            appendMsg('bot', 'Sedang berpikir...', loaderId);
 
-            // BUAT PROMPT DENGAN KONTEKS
-            const context = `Anda adalah asisten cerdas TaxFlow. Nama user adalah ${nama}. Saat ini total pajak user di database adalah ${total}. Aplikasi ini memiliki kategori: Penghasilan, Kendaraan, Properti, dan Konsumsi. Jawablah secara singkat dan bantu user memahami pajaknya.`;
+            const totalPajakAktif = document.getElementById('total-val').innerText;
+            const namaUser = document.getElementById('display-user').innerText;
 
             try {
-                const loaderId = 'ld-' + Date.now();
-                appendMsg('bot', 'Sedang berpikir...', loaderId);
-
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ 
-                            parts: [{ 
-                                text: `${context}\n\nPertanyaan User: ${userText}` 
-                            }] 
+                        contents: [{
+                            parts: [{
+                                text: `Anda adalah Asisten Pajak Pintar bernama TaxFlow AI. Anda sedang melayani pengguna bernama ${namaUser}. Saat ini, akumulasi total perhitungan pajak pengguna di dasbor adalah sebesar ${totalPajakAktif}.\n\nJawablah pertanyaan berikut dari pengguna dengan gaya bahasa yang profesional, ramah, solutif, mudah dipahami, dan relevan dengan konteks perpajakan di Indonesia:\n"${userText}"`
+                            }]
                         }]
                     })
                 });
 
-                const data = await res.json();
-                const botResponse = data.candidates[0].content.parts[0].text;
+                const data = await response.json();
+                const loaderElement = document.getElementById(loaderId);
                 
-                // Update loader dengan jawaban asli
-                document.getElementById(loaderId).innerText = botResponse;
-            } catch (e) { 
-                appendMsg('bot', 'Gagal memuat jawaban. Pastikan API Key benar.'); 
+                if (loaderElement) {
+                    if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                        let aiReply = data.candidates[0].content.parts[0].text;
+                        aiReply = aiReply.replace(/\*\*/g, ''); 
+                        loaderElement.innerText = aiReply;
+                    } else {
+                        loaderElement.innerText = "Maaf, saya tidak dapat memproses jawaban saat ini.";
+                    }
+                }
+            } catch (error) {
+                const loaderElement = document.getElementById(loaderId);
+                if (loaderElement) loaderElement.innerText = "Gagal memuat jawaban.";
             }
         }
 
@@ -284,21 +518,7 @@
             const msgBox = document.getElementById('chat-messages');
             const div = document.createElement('div');
             if(id) div.id = id;
-            div.style.padding = "10px"; 
-            div.style.borderRadius = "10px"; 
-            div.style.maxWidth = "85%";
-            div.style.fontSize = "13px";
-            div.style.lineHeight = "1.4";
-
-            if(sender === 'user') { 
-                div.style.background = "var(--primary-emerald)"; 
-                div.style.color="white"; 
-                div.style.alignSelf="flex-end"; 
-            } else { 
-                div.style.background = "white"; 
-                div.style.border = "1px solid var(--border-color)"; 
-                div.style.alignSelf="flex-start"; 
-            }
+            div.classList.add('msg-bubble', sender === 'user' ? 'msg-user' : 'msg-bot');
             div.innerText = text;
             msgBox.appendChild(div);
             msgBox.scrollTop = msgBox.scrollHeight;
@@ -307,15 +527,15 @@
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text("Laporan Transaksi TaxFlow", 14, 20);
-            doc.autoTable({
-                startY: 30,
-                html: '#tax-table',
-            });
-            doc.save('Laporan_Pajak.pdf');
+            doc.text("Laporan Transaksi Pajak Premium - TaxFlow", 14, 20);
+            doc.autoTable({ startY: 30, html: '#tax-table' });
+            doc.save('Laporan_Analitik_TaxFlow.pdf');
         }
 
-        function logout() { localStorage.removeItem('userPajak'); window.location.href = "index.html"; }
+        function logout() { 
+            localStorage.removeItem('userPajak'); 
+            window.location.href = "index.html"; 
+        }
     </script>
 </body>
 </html>
